@@ -1,6 +1,7 @@
 from fastmcp import FastMCP
 import sqlite3
 import json
+import os
 from datetime import date, datetime, timezone, timedelta
 
 mcp = FastMCP("Korean Vocab Bot")
@@ -105,4 +106,4 @@ def add_word(korean: str, english: str, type: str = "vocab",
     return {"id": word_id, "korean": korean, "english": english}
 
 if __name__ == "__main__":
-    mcp.run(transport="sse")
+    mcp.run(transport="sse", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
