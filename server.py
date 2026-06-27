@@ -7,17 +7,58 @@ from datetime import date, datetime, timezone, timedelta
 mcp = FastMCP("Korean Vocab Bot")
 DB_PATH = "korean.db"
 
+BASE_IMAGE_URL = "https://raw.githubusercontent.com/herrpreis/korean-vocab/main/images/"
+
+# Mapping: korean word -> github image number
+IMAGE_MAP = {
+    "약속": "30", "복잡하다": "12", "북": "18", "동서남북": "42",
+    "지금": "48", "만": "20", "주문하다": "53", "열심히": "9",
+    "조카": "52", "딸": "40", "놀다": "17", "수업": "7",
+    "중": "47", "요즘": "21", "어렵다": "28", "맑다": "38",
+    "조심하다": "63", "그럼": "3", "가족": "1", "손수건": "57",
+    "외출하다": "22", "읽다": "19", "과자": "62", "기저귀": "27",
+    "자전거": "50", "등산하다": "43", "심심하다": "36", "스물": "58",
+    "서른": "8", "장난감": "56", "주무스다": "35", "대화": "5",
+    "댁": "26", "친절하다": "2", "드리다": "44", "기린": "54",
+    "개벽": "46", "독서실": "13", "찾다": "32", "보통": "37",
+    "만두": "34", "담배 피우다": "49", "사무실": "51", "왜냐하면": "59",
+    "다른": "23", "알아보다": "11", "걸리다": "29", "정류장": "0",
+    "추천하다": "14", "얇다": "60", "유행이다": "24", "상사": "55",
+    "계획하다": "4", "준비하다": "39", "유치원": "15", "놀이터": "6",
+    "바꾸다": "16", "거실": "41", "뻥튀기": "61", "돌잔치": "25",
+}
+
 def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+def init_db():
+    db = get_db()
+    # Add image_url column if it doesn't exist
+    try:
+        db.execute("ALTER TABLE words ADD COLUMN image_url TEXT DEFAULT ''")
+        db.commit()
+    except Exception:
+        pass  # Column already exists
+
+    # Populate image_url for known words
+    for korean, num in IMAGE_MAP.items():
+        url = BASE_IMAGE_URL + num
+        db.execute(
+            "UPDATE words SET image_url = ? WHERE korean = ? AND (image_url IS NULL OR image_url = '')",
+            (url, korean)
+        )
+    db.commit()
+
+init_db()
 
 @mcp.tool()
 def get_due_cards(limit: int = 5) -> list[dict]:
     """Returns cards due for review today, oldest due first."""
     db = get_db()
     rows = db.execute("""
-        SELECT w.id, w.korean, w.english, w.type, w.topic, w.example
+        SELECT w.id, w.korean, w.english, w.type, w.topic, w.example, w.image_url
         FROM words w
         JOIN card_state cs ON w.id = cs.word_id
         WHERE cs.due_date <= ?
@@ -90,12 +131,12 @@ def record_review(word_id: int, rating: int) -> dict:
 
 @mcp.tool()
 def add_word(korean: str, english: str, type: str = "vocab",
-             topic: str = "", example: str = "") -> dict:
+             topic: str = "", example: str = "", image_url: str = "") -> dict:
     """Adds a new word or grammar point to the database."""
     db = get_db()
     cur = db.execute(
-        "INSERT INTO words (korean, english, type, topic, example) VALUES (?, ?, ?, ?, ?)",
-        (korean, english, type, topic, example)
+        "INSERT INTO words (korean, english, type, topic, example, image_url) VALUES (?, ?, ?, ?, ?, ?)",
+        (korean, english, type, topic, example, image_url)
     )
     word_id = cur.lastrowid
     db.execute(
@@ -125,7 +166,7 @@ def get_cards_by_type(type: str, limit: int = 10) -> list[dict]:
     """Returns cards filtered by type: 'vocab', 'grammar', or 'phrase'."""
     db = get_db()
     rows = db.execute(
-        "SELECT id, korean, english, type, topic, example FROM words WHERE type = ? LIMIT ?",
+        "SELECT id, korean, english, type, topic, example, image_url FROM words WHERE type = ? LIMIT ?",
         (type, limit)
     ).fetchall()
     return [dict(r) for r in rows]
@@ -135,7 +176,7 @@ def get_cards_by_topic(topic: str, limit: int = 10) -> list[dict]:
     """Returns cards filtered by topic (e.g. 'Restaurant', 'weather', 'Shop')."""
     db = get_db()
     rows = db.execute(
-        "SELECT id, korean, english, type, topic, example FROM words WHERE topic LIKE ? LIMIT ?",
+        "SELECT id, korean, english, type, topic, example, image_url FROM words WHERE topic LIKE ? LIMIT ?",
         (f"%{topic}%", limit)
     ).fetchall()
     return [dict(r) for r in rows]
@@ -145,7 +186,7 @@ def search_cards(query: str, limit: int = 10) -> list[dict]:
     """Searches cards by keyword in Korean or English fields."""
     db = get_db()
     rows = db.execute(
-        """SELECT id, korean, english, type, topic, example FROM words
+        """SELECT id, korean, english, type, topic, example, image_url FROM words
            WHERE korean LIKE ? OR english LIKE ? LIMIT ?""",
         (f"%{query}%", f"%{query}%", limit)
     ).fetchall()
@@ -161,16 +202,16 @@ def generate_test(type: str = "vocab", topic: str = "", limit: int = 5) -> dict:
     db = get_db()
     if topic:
         words = db.execute(
-            "SELECT id, korean, english, type, topic, example FROM words WHERE type = ? AND topic LIKE ? LIMIT ?",
+            "SELECT id, korean, english, type, topic, example, image_url FROM words WHERE type = ? AND topic LIKE ? LIMIT ?",
             (type, f"%{topic}%", limit)
         ).fetchall()
     else:
         words = db.execute(
-            "SELECT id, korean, english, type, topic, example FROM words WHERE type = ? LIMIT ?",
+            "SELECT id, korean, english, type, topic, example, image_url FROM words WHERE type = ? LIMIT ?",
             (type, limit)
         ).fetchall()
     grammar = db.execute(
-        "SELECT id, korean, english, type, topic, example FROM words WHERE type = 'grammar' LIMIT 3"
+        "SELECT id, korean, english, type, topic, example, image_url FROM words WHERE type = 'grammar' LIMIT 3"
     ).fetchall()
     return {
         "words": [dict(r) for r in words],
