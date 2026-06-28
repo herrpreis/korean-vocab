@@ -9,23 +9,68 @@ DB_PATH = "korean.db"
 
 BASE_IMAGE_URL = "https://raw.githubusercontent.com/herrpreis/korean-vocab/main/images/"
 
-# Mapping: korean word -> github image number
+# Mapping: korean word -> github image filename (with correct extension)
 IMAGE_MAP = {
-    "약속": "30", "복잡하다": "12", "북": "18", "동서남북": "42",
-    "지금": "48", "만": "20", "주문하다": "53", "열심히": "9",
-    "조카": "52", "딸": "40", "놀다": "17", "수업": "7",
-    "중": "47", "요즘": "21", "어렵다": "28", "맑다": "38",
-    "조심하다": "63", "그럼": "3", "가족": "1", "손수건": "57",
-    "외출하다": "22", "읽다": "19", "과자": "62", "기저귀": "27",
-    "자전거": "50", "등산하다": "43", "심심하다": "36", "스물": "58",
-    "서른": "8", "장난감": "56", "주무스다": "35", "대화": "5",
-    "댁": "26", "친절하다": "2", "드리다": "44", "기린": "54",
-    "개벽": "46", "독서실": "13", "찾다": "32", "보통": "37",
-    "만두": "34", "담배 피우다": "49", "사무실": "51", "왜냐하면": "59",
-    "다른": "23", "알아보다": "11", "걸리다": "29", "정류장": "0",
-    "추천하다": "14", "얇다": "60", "유행이다": "24", "상사": "55",
-    "계획하다": "4", "준비하다": "39", "유치원": "15", "놀이터": "6",
-    "바꾸다": "16", "거실": "41", "뻥튀기": "61", "돌잔치": "25",
+    "약속": "30.png",
+    "복잡하다": "12.jpg",
+    "북": "18.jpg",
+    "동서남북": "42.png",
+    "지금": "48.jpg",
+    "만": "20.png",
+    "주문하다": "53.jpg",
+    "열심히": "9.jpg",
+    "조카": "52.jpg",
+    "딸": "40.jpg",
+    "놀다": "17.jpg",
+    "수업": "7.jpg",
+    "중": "47.jpg",
+    "요즘": "21.jpg",
+    "어렵다": "28.jpg",
+    "맑다": "38.jpg",
+    "조심하다": "63.jpg",
+    "그럼": "3.jpg",
+    "가족": "1.jpg",
+    "손수건": "57.jpg",
+    "외출하다": "22.jpg",
+    "읽다": "19.jpg",
+    "과자": "62.jpg",
+    "기저귀": "27.jpg",
+    "자전거": "50.jpg",
+    "등산하다": "43.jpg",
+    "심심하다": "36.jpg",
+    "스물": "58.jpg",
+    "서른": "8.jpg",
+    "장난감": "56.jpg",
+    "주무스다": "35.jpg",
+    "대화": "5.jpg",
+    "댁": "26.jpg",
+    "친절하다": "2.jpg",
+    "드리다": "44.jpg",
+    "기린": "54.jpg",
+    "개벽": "46.jpg",
+    "독서실": "13.jpg",
+    "찾다": "32.jpg",
+    "보통": "37.jpg",
+    "만두": "34.jpg",
+    "담배 피우다": "49.jpg",
+    "사무실": "51.jpg",
+    "왜냐하면": "59.jpg",
+    "다른": "23.jpg",
+    "알아보다": "11.jpg",
+    "걸리다": "29.png",
+    "정류장": "0.png",
+    "추천하다": "14.jpg",
+    "얇다": "60.png",
+    "유행이다": "24.png",
+    "상사": "55.jpg",
+    "계획하다": "4.jpg",
+    "준비하다": "39.png",
+    "유치원": "15.jpg",
+    "놀이터": "6.png",
+    "바꾸다": "16.png",
+    "거실": "41.png",
+    "뻥튀기": "61.png",
+    "돌잔치": "25.png",
 }
 
 def get_db():
@@ -35,18 +80,16 @@ def get_db():
 
 def init_db():
     db = get_db()
-    # Add image_url column if it doesn't exist
     try:
         db.execute("ALTER TABLE words ADD COLUMN image_url TEXT DEFAULT ''")
         db.commit()
     except Exception:
-        pass  # Column already exists
+        pass
 
-    # Populate image_url for known words
-    for korean, num in IMAGE_MAP.items():
-        url = BASE_IMAGE_URL + num
+    for korean, filename in IMAGE_MAP.items():
+        url = BASE_IMAGE_URL + filename
         db.execute(
-            "UPDATE words SET image_url = ? WHERE korean = ? AND (image_url IS NULL OR image_url = '')",
+            "UPDATE words SET image_url = ? WHERE korean = ?",
             (url, korean)
         )
     db.commit()
