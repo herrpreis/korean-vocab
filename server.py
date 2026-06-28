@@ -2,6 +2,8 @@ from fastmcp import FastMCP
 import sqlite3
 import json
 import os
+import base64
+import urllib.request
 from datetime import date, datetime, timezone, timedelta
 
 mcp = FastMCP("Korean Vocab Bot")
@@ -95,6 +97,79 @@ def init_db():
     db.commit()
 
 init_db()
+
+@mcp.tool()
+def upload_image(image_url: str, filename: str, korean: str = "") -> dict:
+    """
+    Fetches an image from a URL and uploads it to the GitHub images/ folder.
+    Optionally updates the image_url in the database for a given korean word.
+    Returns the final GitHub raw URL.
+    """
+    github_token = os.environ.get("GITHUB_TOKEN", "")
+    if not github_token:
+        return {"error": "GITHUB_TOKEN not set in environment"}
+
+    # Fetch image bytes
+    try:
+        req = urllib.request.Request(image_url, headers={"User-Agent": "korean-vocab-bot"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            image_bytes = resp.read()
+    except Exception as e:
+        return {"error": f"Failed to fetch image: {e}"}
+
+    encoded = base64.b64encode(image_bytes).decode("utf-8")
+
+    # Check if file already exists (need SHA to update)
+    api_path = f"https://api.github.com/repos/herrpreis/korean-vocab/contents/images/{filename}"
+    sha = None
+    try:
+        check_req = urllib.request.Request(
+            api_path,
+            headers={
+                "Authorization": f"token {github_token}",
+                "Accept": "application/vnd.github+json"
+            }
+        )
+        with urllib.request.urlopen(check_req) as resp:
+            existing = json.loads(resp.read())
+            sha = existing.get("sha")
+    except Exception:
+        pass  # File doesn't exist yet, that's fine
+
+    # Push to GitHub
+    payload = {
+        "message": f"Add image {filename}",
+        "content": encoded,
+    }
+    if sha:
+        payload["sha"] = sha
+
+    data = json.dumps(payload).encode("utf-8")
+    push_req = urllib.request.Request(
+        api_path,
+        data=data,
+        method="PUT",
+        headers={
+            "Authorization": f"token {github_token}",
+            "Accept": "application/vnd.github+json",
+            "Content-Type": "application/json"
+        }
+    )
+    try:
+        with urllib.request.urlopen(push_req) as resp:
+            result = json.loads(resp.read())
+    except Exception as e:
+        return {"error": f"GitHub push failed: {e}"}
+
+    final_url = BASE_IMAGE_URL + filename
+
+    # Update DB if korean word provided
+    if korean:
+        db = get_db()
+        db.execute("UPDATE words SET image_url = ? WHERE korean = ?", (final_url, korean))
+        db.commit()
+
+    return {"success": True, "url": final_url, "filename": filename}
 
 @mcp.tool()
 def get_due_cards(limit: int = 5) -> list[dict]:
