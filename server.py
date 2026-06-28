@@ -11,7 +11,6 @@ DB_PATH = "korean.db"
 
 BASE_IMAGE_URL = "https://raw.githubusercontent.com/herrpreis/korean-vocab/main/images/"
 
-# Mapping: korean word -> github image filename (with correct extension)
 IMAGE_MAP = {
     "약속": "30.png",
     "복잡하다": "12.jpg",
@@ -82,18 +81,25 @@ def get_db():
 
 def init_db():
     db = get_db()
+
+    # Original image_url column
     try:
         db.execute("ALTER TABLE words ADD COLUMN image_url TEXT DEFAULT ''")
         db.commit()
     except Exception:
         pass
 
+    # New grammar-specific columns
+    for col in ["usage", "formation", "sentences", "translations", "notes"]:
+        try:
+            db.execute(f"ALTER TABLE words ADD COLUMN {col} TEXT DEFAULT ''")
+            db.commit()
+        except Exception:
+            pass
+
     for korean, filename in IMAGE_MAP.items():
         url = BASE_IMAGE_URL + filename
-        db.execute(
-            "UPDATE words SET image_url = ? WHERE korean = ?",
-            (url, korean)
-        )
+        db.execute("UPDATE words SET image_url = ? WHERE korean = ?", (url, korean))
     db.commit()
 
 init_db()
@@ -109,7 +115,6 @@ def upload_image(image_url: str, filename: str, korean: str = "") -> dict:
     if not github_token:
         return {"error": "GITHUB_TOKEN not set in environment"}
 
-    # Fetch image bytes
     try:
         req = urllib.request.Request(image_url, headers={"User-Agent": "korean-vocab-bot"})
         with urllib.request.urlopen(req, timeout=15) as resp:
@@ -119,7 +124,6 @@ def upload_image(image_url: str, filename: str, korean: str = "") -> dict:
 
     encoded = base64.b64encode(image_bytes).decode("utf-8")
 
-    # Check if file already exists (need SHA to update)
     api_path = f"https://api.github.com/repos/herrpreis/korean-vocab/contents/images/{filename}"
     sha = None
     try:
@@ -134,21 +138,15 @@ def upload_image(image_url: str, filename: str, korean: str = "") -> dict:
             existing = json.loads(resp.read())
             sha = existing.get("sha")
     except Exception:
-        pass  # File doesn't exist yet, that's fine
+        pass
 
-    # Push to GitHub
-    payload = {
-        "message": f"Add image {filename}",
-        "content": encoded,
-    }
+    payload = {"message": f"Add image {filename}", "content": encoded}
     if sha:
         payload["sha"] = sha
 
     data = json.dumps(payload).encode("utf-8")
     push_req = urllib.request.Request(
-        api_path,
-        data=data,
-        method="PUT",
+        api_path, data=data, method="PUT",
         headers={
             "Authorization": f"token {github_token}",
             "Accept": "application/vnd.github+json",
@@ -157,13 +155,12 @@ def upload_image(image_url: str, filename: str, korean: str = "") -> dict:
     )
     try:
         with urllib.request.urlopen(push_req) as resp:
-            result = json.loads(resp.read())
+            json.loads(resp.read())
     except Exception as e:
         return {"error": f"GitHub push failed: {e}"}
 
     final_url = BASE_IMAGE_URL + filename
 
-    # Update DB if korean word provided
     if korean:
         db = get_db()
         db.execute("UPDATE words SET image_url = ? WHERE korean = ?", (final_url, korean))
@@ -176,7 +173,8 @@ def get_due_cards(limit: int = 5) -> list[dict]:
     """Returns cards due for review today, oldest due first."""
     db = get_db()
     rows = db.execute("""
-        SELECT w.id, w.korean, w.english, w.type, w.topic, w.example, w.image_url
+        SELECT w.id, w.korean, w.english, w.type, w.topic, w.example,
+               w.usage, w.formation, w.sentences, w.translations, w.notes, w.image_url
         FROM words w
         JOIN card_state cs ON w.id = cs.word_id
         WHERE cs.due_date <= ?
@@ -190,7 +188,7 @@ def get_stats() -> dict:
     """Returns study statistics."""
     db = get_db()
     total = db.execute("SELECT COUNT(*) FROM words").fetchone()[0]
-    due   = db.execute(
+    due = db.execute(
         "SELECT COUNT(*) FROM card_state WHERE due_date <= ?",
         (date.today().isoformat(),)
     ).fetchone()[0]
@@ -248,13 +246,34 @@ def record_review(word_id: int, rating: int) -> dict:
     }
 
 @mcp.tool()
-def add_word(korean: str, english: str, type: str = "vocab",
-             topic: str = "", example: str = "", image_url: str = "") -> dict:
-    """Adds a new word or grammar point to the database."""
+def add_word(
+    korean: str,
+    english: str,
+    type: str = "vocab",
+    topic: str = "",
+    example: str = "",
+    image_url: str = "",
+    usage: str = "",
+    formation: str = "",
+    sentences: str = "",
+    translations: str = "",
+    notes: str = ""
+) -> dict:
+    """
+    Adds a new word or grammar point to the database.
+    For grammar cards, use the dedicated fields:
+      - usage: how to attach the pattern to verb stems
+      - formation: 3 formation examples (e.g. 가다 → 가고 싶어요)
+      - sentences: 3 Korean example sentences
+      - translations: English translations of the sentences
+      - notes: irregular forms, negative form, common mistakes
+    """
     db = get_db()
     cur = db.execute(
-        "INSERT INTO words (korean, english, type, topic, example, image_url) VALUES (?, ?, ?, ?, ?, ?)",
-        (korean, english, type, topic, example, image_url)
+        """INSERT INTO words
+           (korean, english, type, topic, example, image_url, usage, formation, sentences, translations, notes)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (korean, english, type, topic, example, image_url, usage, formation, sentences, translations, notes)
     )
     word_id = cur.lastrowid
     db.execute(
@@ -263,6 +282,28 @@ def add_word(korean: str, english: str, type: str = "vocab",
     )
     db.commit()
     return {"id": word_id, "korean": korean, "english": english}
+
+@mcp.tool()
+def update_grammar(
+    word_id: int,
+    usage: str = "",
+    formation: str = "",
+    sentences: str = "",
+    translations: str = "",
+    notes: str = ""
+) -> dict:
+    """
+    Updates the grammar-specific fields for an existing card.
+    Use this to migrate or correct grammar cards.
+    """
+    db = get_db()
+    db.execute(
+        """UPDATE words SET usage=?, formation=?, sentences=?, translations=?, notes=?
+           WHERE id=?""",
+        (usage, formation, sentences, translations, notes, word_id)
+    )
+    db.commit()
+    return {"success": True, "word_id": word_id}
 
 @mcp.tool()
 def get_deck_summary() -> dict:
@@ -284,7 +325,9 @@ def get_cards_by_type(type: str, limit: int = 10) -> list[dict]:
     """Returns cards filtered by type: 'vocab', 'grammar', or 'phrase'."""
     db = get_db()
     rows = db.execute(
-        "SELECT id, korean, english, type, topic, example, image_url FROM words WHERE type = ? LIMIT ?",
+        """SELECT id, korean, english, type, topic, example,
+           usage, formation, sentences, translations, notes, image_url
+           FROM words WHERE type = ? LIMIT ?""",
         (type, limit)
     ).fetchall()
     return [dict(r) for r in rows]
@@ -294,7 +337,9 @@ def get_cards_by_topic(topic: str, limit: int = 10) -> list[dict]:
     """Returns cards filtered by topic (e.g. 'Restaurant', 'weather', 'Shop')."""
     db = get_db()
     rows = db.execute(
-        "SELECT id, korean, english, type, topic, example, image_url FROM words WHERE topic LIKE ? LIMIT ?",
+        """SELECT id, korean, english, type, topic, example,
+           usage, formation, sentences, translations, notes, image_url
+           FROM words WHERE topic LIKE ? LIMIT ?""",
         (f"%{topic}%", limit)
     ).fetchall()
     return [dict(r) for r in rows]
@@ -304,8 +349,9 @@ def search_cards(query: str, limit: int = 10) -> list[dict]:
     """Searches cards by keyword in Korean or English fields."""
     db = get_db()
     rows = db.execute(
-        """SELECT id, korean, english, type, topic, example, image_url FROM words
-           WHERE korean LIKE ? OR english LIKE ? LIMIT ?""",
+        """SELECT id, korean, english, type, topic, example,
+           usage, formation, sentences, translations, notes, image_url
+           FROM words WHERE korean LIKE ? OR english LIKE ? LIMIT ?""",
         (f"%{query}%", f"%{query}%", limit)
     ).fetchall()
     return [dict(r) for r in rows]
@@ -320,16 +366,22 @@ def generate_test(type: str = "vocab", topic: str = "", limit: int = 5) -> dict:
     db = get_db()
     if topic:
         words = db.execute(
-            "SELECT id, korean, english, type, topic, example, image_url FROM words WHERE type = ? AND topic LIKE ? LIMIT ?",
+            """SELECT id, korean, english, type, topic, example,
+               usage, formation, sentences, translations, notes, image_url
+               FROM words WHERE type = ? AND topic LIKE ? LIMIT ?""",
             (type, f"%{topic}%", limit)
         ).fetchall()
     else:
         words = db.execute(
-            "SELECT id, korean, english, type, topic, example, image_url FROM words WHERE type = ? LIMIT ?",
+            """SELECT id, korean, english, type, topic, example,
+               usage, formation, sentences, translations, notes, image_url
+               FROM words WHERE type = ? LIMIT ?""",
             (type, limit)
         ).fetchall()
     grammar = db.execute(
-        "SELECT id, korean, english, type, topic, example, image_url FROM words WHERE type = 'grammar' LIMIT 3"
+        """SELECT id, korean, english, type, topic, example,
+           usage, formation, sentences, translations, notes, image_url
+           FROM words WHERE type = 'grammar' LIMIT 3"""
     ).fetchall()
     return {
         "words": [dict(r) for r in words],
