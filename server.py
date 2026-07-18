@@ -97,7 +97,7 @@ def init_db():
         except Exception:
             pass
 
-     db.execute("""
+    db.execute("""
         CREATE TABLE IF NOT EXISTS lessons (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             lesson_date TEXT UNIQUE,
