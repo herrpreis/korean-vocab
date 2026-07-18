@@ -340,6 +340,40 @@ def update_grammar(
     return {"success": True, "word_id": word_id}
 
 @mcp.tool()
+def update_word(
+    word_id: int,
+    english: str = "",
+    topic: str = "",
+    example: str = "",
+    notes: str = "",
+    image_url: str = ""
+) -> dict:
+    """
+    Partially updates an existing vocab/phrase card. Only pass the fields
+    you want to change - any field left blank/omitted keeps its current
+    value (unlike update_grammar, which overwrites all its fields
+    unconditionally). Use this to add a mnemonic, fix a meaning/topic, or
+    attach an image to a word that already exists in the deck.
+    """
+    fields = {
+        "english": english,
+        "topic": topic,
+        "example": example,
+        "notes": notes,
+        "image_url": image_url,
+    }
+    updates = {k: v for k, v in fields.items() if v != ""}
+    if not updates:
+        return {"error": "No fields provided to update (all were blank)"}
+
+    db = get_db()
+    set_clause = ", ".join(f"{k}=?" for k in updates)
+    values = list(updates.values()) + [word_id]
+    db.execute(f"UPDATE words SET {set_clause} WHERE id=?", values)
+    db.commit()
+    return {"success": True, "word_id": word_id, "updated_fields": list(updates.keys())}
+
+@mcp.tool()
 def get_deck_summary() -> dict:
     """Returns a summary of how many cards exist per type and topic."""
     db = get_db()
