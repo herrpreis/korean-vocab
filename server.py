@@ -104,27 +104,42 @@ def init_db():
 
 init_db()
 
+
 @mcp.tool()
-def upload_image(image_url: str, filename: str, korean: str = "") -> dict:
+def upload_image(filename: str, image_url: str = "", image_base64: str = "", korean: str = "") -> dict:
     """
-    Fetches an image from a URL and uploads it to the GitHub images/ folder.
-    Optionally updates the image_url in the database for a given korean word.
-    Returns the final GitHub raw URL.
+    Uploads an image to the GitHub images/ folder, either by fetching it from
+    a URL or from raw base64-encoded image data (e.g. an image uploaded
+    directly in a chat). Optionally updates the image_url in the database
+    for a given korean word. Returns the final GitHub raw URL.
+ 
+    Provide exactly one of `image_url` or `image_base64`.
     """
     github_token = os.environ.get("GITHUB_TOKEN", "")
     if not github_token:
         return {"error": "GITHUB_TOKEN not set in environment"}
-
-    try:
-        req = urllib.request.Request(image_url, headers={"User-Agent": "korean-vocab-bot"})
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            image_bytes = resp.read()
-    except Exception as e:
-        return {"error": f"Failed to fetch image: {e}"}
-
+ 
+    if not image_url and not image_base64:
+        return {"error": "Provide either image_url or image_base64"}
+ 
+    if image_base64:
+        # Strip a data URL prefix if present, e.g. "data:image/png;base64,...."
+        b64_data = image_base64.split(",", 1)[-1] if image_base64.startswith("data:") else image_base64
+        try:
+            image_bytes = base64.b64decode(b64_data)
+        except Exception as e:
+            return {"error": f"Failed to decode image_base64: {e}"}
+    else:
+        try:
+            req = urllib.request.Request(image_url, headers={"User-Agent": "korean-vocab-bot"})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                image_bytes = resp.read()
+        except Exception as e:
+            return {"error": f"Failed to fetch image: {e}"}
+ 
     encoded = base64.b64encode(image_bytes).decode("utf-8")
-
     api_path = f"https://api.github.com/repos/herrpreis/korean-vocab/contents/images/{filename}"
+ 
     sha = None
     try:
         check_req = urllib.request.Request(
@@ -139,11 +154,11 @@ def upload_image(image_url: str, filename: str, korean: str = "") -> dict:
             sha = existing.get("sha")
     except Exception:
         pass
-
+ 
     payload = {"message": f"Add image {filename}", "content": encoded}
     if sha:
         payload["sha"] = sha
-
+ 
     data = json.dumps(payload).encode("utf-8")
     push_req = urllib.request.Request(
         api_path, data=data, method="PUT",
@@ -158,15 +173,16 @@ def upload_image(image_url: str, filename: str, korean: str = "") -> dict:
             json.loads(resp.read())
     except Exception as e:
         return {"error": f"GitHub push failed: {e}"}
-
+ 
     final_url = BASE_IMAGE_URL + filename
-
     if korean:
         db = get_db()
         db.execute("UPDATE words SET image_url = ? WHERE korean = ?", (final_url, korean))
         db.commit()
-
+ 
     return {"success": True, "url": final_url, "filename": filename}
+
+
 
 @mcp.tool()
 def get_due_cards(limit: int = 5) -> list[dict]:
