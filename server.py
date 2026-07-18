@@ -97,6 +97,21 @@ def init_db():
         except Exception:
             pass
 
+     db.execute("""
+        CREATE TABLE IF NOT EXISTS lessons (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            lesson_date TEXT UNIQUE,
+            grammar_points TEXT DEFAULT '',
+            vocab TEXT DEFAULT '',
+            homework TEXT DEFAULT '',
+            summary TEXT DEFAULT '',
+            raw_text TEXT DEFAULT '',
+            file_urls TEXT DEFAULT '',
+            created_at TEXT
+        )
+    """)
+    db.commit()
+    
     for korean, filename in IMAGE_MAP.items():
         url = BASE_IMAGE_URL + filename
         db.execute("UPDATE words SET image_url = ? WHERE korean = ?", (url, korean))
@@ -455,6 +470,181 @@ def generate_test(type: str = "vocab", topic: str = "", limit: int = 5) -> dict:
         "words": [dict(r) for r in words],
         "grammar": [dict(r) for r in grammar]
     }
+
+
+
+BASE_LESSON_URL = "https://raw.githubusercontent.com/herrpreis/korean-vocab/main/lessons/"
+ 
+ 
+@mcp.tool()
+def upload_lesson(filename: str, file_base64: str, lesson_date: str = "") -> dict:
+    """
+    Uploads a lesson file (PDF, worksheet, homework sheet, etc.) to the
+    GitHub lessons/ folder from base64-encoded file data. Validates PDFs
+    for completeness before uploading. If lesson_date (YYYY-MM-DD) is
+    given and the filename does not already start with it, the date is
+    prepended so files sort chronologically, e.g. 2026-07-15-homework.pdf.
+    Returns the final GitHub raw URL.
+    """
+    github_token = os.environ.get("GITHUB_TOKEN", "")
+    if not github_token:
+        return {"error": "GITHUB_TOKEN not set in environment"}
+ 
+    # Decode and validate the file data
+    b64_data = file_base64.split(",", 1)[-1] if file_base64.startswith("data:") else file_base64
+    try:
+        file_bytes = base64.b64decode(b64_data)
+    except Exception as e:
+        return {"error": f"Failed to decode file_base64: {e}"}
+ 
+    if len(file_bytes) < 100:
+        return {"error": f"File data is suspiciously small ({len(file_bytes)} bytes) - likely corrupted or empty"}
+ 
+    # PDFs must start with the %PDF magic bytes and contain an EOF marker
+    if filename.lower().endswith(".pdf"):
+        if not file_bytes.startswith(b"%PDF"):
+            return {"error": "File does not look like a valid PDF (missing %PDF header)"}
+        if b"%%EOF" not in file_bytes[-2048:]:
+            return {"error": f"PDF appears truncated ({len(file_bytes)} bytes received, no %%EOF marker) - upload aborted"}
+ 
+    # Prepend the lesson date for chronological sorting
+    if lesson_date and not filename.startswith(lesson_date):
+        filename = f"{lesson_date}-{filename}"
+ 
+    encoded = base64.b64encode(file_bytes).decode("utf-8")
+    api_path = f"https://api.github.com/repos/herrpreis/korean-vocab/contents/lessons/{filename}"
+ 
+    # If the file already exists we need its sha to overwrite it
+    sha = None
+    try:
+        check_req = urllib.request.Request(
+            api_path,
+            headers={
+                "Authorization": f"token {github_token}",
+                "Accept": "application/vnd.github+json"
+            }
+        )
+        with urllib.request.urlopen(check_req) as resp:
+            existing = json.loads(resp.read())
+            sha = existing.get("sha")
+    except Exception:
+        pass
+ 
+    payload = {"message": f"Add lesson file {filename}", "content": encoded}
+    if sha:
+        payload["sha"] = sha
+ 
+    data = json.dumps(payload).encode("utf-8")
+    push_req = urllib.request.Request(
+        api_path, data=data, method="PUT",
+        headers={
+            "Authorization": f"token {github_token}",
+            "Accept": "application/vnd.github+json",
+            "Content-Type": "application/json"
+        }
+    )
+    try:
+        with urllib.request.urlopen(push_req) as resp:
+            json.loads(resp.read())
+    except Exception as e:
+        return {"error": f"GitHub push failed: {e}"}
+ 
+    return {
+        "success": True,
+        "url": BASE_LESSON_URL + filename,
+        "filename": filename,
+        "bytes_uploaded": len(file_bytes)
+    }
+ 
+ 
+@mcp.tool()
+def save_lesson(
+    lesson_date: str,
+    grammar_points: str = "",
+    vocab: str = "",
+    homework: str = "",
+    summary: str = "",
+    raw_text: str = "",
+    file_urls: str = ""
+) -> dict:
+    """
+    Saves the structured content extracted from a lesson to the database.
+    One row per lesson_date (YYYY-MM-DD); saving again for the same date
+    updates the existing entry. Fields:
+    - grammar_points: comma-separated patterns, e.g. "-(으)니까, -았/었으면 좋겠다"
+    - vocab: comma-separated Korean words covered
+    - homework: the homework task(s) as text
+    - summary: structured summary incl. descriptions of visual exercises
+    - raw_text: full extracted transcript text
+    - file_urls: comma-separated GitHub raw URLs of the original files
+    """
+    if not lesson_date:
+        return {"error": "lesson_date (YYYY-MM-DD) is required"}
+ 
+    db = get_db()
+    db.execute("""
+        INSERT INTO lessons
+            (lesson_date, grammar_points, vocab, homework, summary, raw_text, file_urls, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(lesson_date) DO UPDATE SET
+            grammar_points = excluded.grammar_points,
+            vocab = excluded.vocab,
+            homework = excluded.homework,
+            summary = excluded.summary,
+            raw_text = excluded.raw_text,
+            file_urls = excluded.file_urls
+    """, (
+        lesson_date, grammar_points, vocab, homework, summary, raw_text,
+        file_urls, datetime.now(timezone.utc).isoformat()
+    ))
+    db.commit()
+ 
+    row = db.execute(
+        "SELECT id FROM lessons WHERE lesson_date = ?", (lesson_date,)
+    ).fetchone()
+    return {"success": True, "id": row["id"], "lesson_date": lesson_date}
+ 
+ 
+@mcp.tool()
+def get_lessons(lesson_date: str = "", query: str = "", limit: int = 5) -> list[dict]:
+    """
+    Retrieves lessons from the database.
+    - No arguments: the most recent lessons (overview without raw_text)
+    - lesson_date "YYYY-MM-DD": that single lesson in full, incl. raw_text
+    - lesson_date "latest": the most recent lesson in full
+    - query: keyword search across grammar, vocab, homework and summary
+      (overview without raw_text)
+    """
+    db = get_db()
+ 
+    if lesson_date:
+        if lesson_date == "latest":
+            row = db.execute(
+                "SELECT * FROM lessons ORDER BY lesson_date DESC LIMIT 1"
+            ).fetchone()
+        else:
+            row = db.execute(
+                "SELECT * FROM lessons WHERE lesson_date = ?", (lesson_date,)
+            ).fetchone()
+        return [dict(row)] if row else []
+ 
+    if query:
+        like = f"%{query}%"
+        rows = db.execute("""
+            SELECT id, lesson_date, grammar_points, vocab, homework, summary, file_urls
+            FROM lessons
+            WHERE grammar_points LIKE ? OR vocab LIKE ? OR homework LIKE ? OR summary LIKE ?
+            ORDER BY lesson_date DESC LIMIT ?
+        """, (like, like, like, like, limit)).fetchall()
+        return [dict(r) for r in rows]
+ 
+    rows = db.execute("""
+        SELECT id, lesson_date, grammar_points, vocab, homework, summary, file_urls
+        FROM lessons
+        ORDER BY lesson_date DESC LIMIT ?
+    """, (limit,)).fetchall()
+    return [dict(r) for r in rows]
+
 
 if __name__ == "__main__":
     mcp.run(transport="sse", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
