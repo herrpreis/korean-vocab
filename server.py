@@ -555,8 +555,100 @@ def upload_lesson(filename: str, file_base64: str, lesson_date: str = "") -> dic
         "filename": filename,
         "bytes_uploaded": len(file_bytes)
     }
+
+
  
- 
+@mcp.tool()
+def upload_lesson_from_url(url: str, filename: str = "", lesson_date: str = "") -> dict:
+    """
+    Uploads a lesson file to the GitHub lessons/ folder by fetching it from a
+    public URL (the server downloads it directly, so the file never has to be
+    base64-encoded through the chat). Use this when the lesson already lives at
+    a reachable URL. Validates PDFs for completeness before uploading. If
+    filename is omitted it is derived from the URL. If lesson_date (YYYY-MM-DD)
+    is given and the filename does not already start with it, the date is
+    prepended so files sort chronologically. Returns the final GitHub raw URL.
+    """
+    github_token = os.environ.get("GITHUB_TOKEN", "")
+    if not github_token:
+        return {"error": "GITHUB_TOKEN not set in environment"}
+
+    if not url:
+        return {"error": "Provide a url to fetch the lesson file from"}
+
+    # Fetch the file from the given URL
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "korean-vocab-bot"})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            file_bytes = resp.read()
+    except Exception as e:
+        return {"error": f"Failed to fetch file from url: {e}"}
+
+    # Derive a filename from the URL if one was not supplied
+    # (strip any ?query / #fragment, then take the last path segment)
+    if not filename:
+        clean = url.split("?", 1)[0].split("#", 1)[0].rstrip("/")
+        filename = clean.rsplit("/", 1)[-1] or "lesson"
+
+    if len(file_bytes) < 100:
+        return {"error": f"File data is suspiciously small ({len(file_bytes)} bytes) - likely corrupted or empty"}
+
+    # PDFs must start with the %PDF magic bytes and contain an EOF marker
+    if filename.lower().endswith(".pdf"):
+        if not file_bytes.startswith(b"%PDF"):
+            return {"error": "File does not look like a valid PDF (missing %PDF header)"}
+        if b"%%EOF" not in file_bytes[-2048:]:
+            return {"error": f"PDF appears truncated ({len(file_bytes)} bytes received, no %%EOF marker) - upload aborted"}
+
+    # Prepend the lesson date for chronological sorting
+    if lesson_date and not filename.startswith(lesson_date):
+        filename = f"{lesson_date}-{filename}"
+
+    encoded = base64.b64encode(file_bytes).decode("utf-8")
+    api_path = f"https://api.github.com/repos/herrpreis/korean-vocab/contents/lessons/{filename}"
+
+    # If the file already exists we need its sha to overwrite it
+    sha = None
+    try:
+        check_req = urllib.request.Request(
+            api_path,
+            headers={
+                "Authorization": f"token {github_token}",
+                "Accept": "application/vnd.github+json"
+            }
+        )
+        with urllib.request.urlopen(check_req) as resp:
+            existing = json.loads(resp.read())
+            sha = existing.get("sha")
+    except Exception:
+        pass
+
+    payload = {"message": f"Add lesson file {filename}", "content": encoded}
+    if sha:
+        payload["sha"] = sha
+
+    data = json.dumps(payload).encode("utf-8")
+    push_req = urllib.request.Request(
+        api_path, data=data, method="PUT",
+        headers={
+            "Authorization": f"token {github_token}",
+            "Accept": "application/vnd.github+json",
+            "Content-Type": "application/json"
+        }
+    )
+    try:
+        with urllib.request.urlopen(push_req) as resp:
+            json.loads(resp.read())
+    except Exception as e:
+        return {"error": f"GitHub push failed: {e}"}
+
+    return {
+        "success": True,
+        "url": BASE_LESSON_URL + filename,
+        "filename": filename,
+        "bytes_uploaded": len(file_bytes)
+    }
+    
 @mcp.tool()
 def save_lesson(
     lesson_date: str,
