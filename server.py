@@ -770,5 +770,44 @@ def get_lessons(lesson_date: str = "", query: str = "", limit: int = 5) -> list[
     return [dict(r) for r in rows]
 
 
+
+@mcp.tool()
+def delete_lesson(lesson_date: str, confirm: bool = False) -> dict:
+    """
+    Permanently deletes a single lesson row by its lesson_date (YYYY-MM-DD).
+    This does NOT touch the original files archived in the GitHub lessons/
+    folder — only the structured record in the database.
+    Safety: you must pass confirm=True to actually delete. A call without
+    confirm returns a preview of what would be removed so the deletion is
+    always deliberate. Deletes exactly one date; there is no bulk delete.
+    """
+    if not lesson_date:
+        return {"error": "lesson_date (YYYY-MM-DD) is required"}
+
+    db = get_db()
+    row = db.execute(
+        "SELECT id, lesson_date, summary FROM lessons WHERE lesson_date = ?",
+        (lesson_date,)
+    ).fetchone()
+
+    if not row:
+        return {"error": f"No lesson found for {lesson_date}", "deleted": False}
+
+    if not confirm:
+        return {
+            "deleted": False,
+            "needs_confirmation": True,
+            "would_delete": {
+                "lesson_date": row["lesson_date"],
+                "summary": (row["summary"][:200] if row["summary"] else "")
+            },
+            "note": "Call again with confirm=True to permanently delete this record."
+        }
+
+    db.execute("DELETE FROM lessons WHERE lesson_date = ?", (lesson_date,))
+    db.commit()
+    return {"deleted": True, "lesson_date": lesson_date}
+
+
 if __name__ == "__main__":
     mcp.run(transport="sse", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
