@@ -4,10 +4,26 @@ import json
 import os
 import base64
 import urllib.request
+import shutil
 from datetime import date, datetime, timezone, timedelta
 
 mcp = FastMCP("Korean Vocab Bot")
-DB_PATH = "korean.db"
+# DB_PATH defaults to the local file for dev, but on Railway it should point
+# at a mounted volume (set env DB_PATH=/data/korean.db) so data survives deploys.
+DB_PATH = os.environ.get("DB_PATH", "korean.db")
+_SEED_DB = "korean.db"  # committed snapshot shipped in the repo
+
+def _seed_db_if_needed():
+    """On first run against a fresh volume, copy the committed snapshot
+    (words, reviews, card_state) onto the volume so nothing is lost.
+    Runs only when DB_PATH points somewhere other than the committed seed
+    and that target file does not exist yet."""
+    if DB_PATH != _SEED_DB and not os.path.exists(DB_PATH):
+        target_dir = os.path.dirname(DB_PATH)
+        if target_dir:
+            os.makedirs(target_dir, exist_ok=True)
+        if os.path.exists(_SEED_DB):
+            shutil.copy(_SEED_DB, DB_PATH)
 
 BASE_IMAGE_URL = "https://raw.githubusercontent.com/herrpreis/korean-vocab/main/images/"
 
@@ -125,6 +141,7 @@ def init_db():
         db.execute("UPDATE words SET image_url = ? WHERE korean = ?", (url, korean))
     db.commit()
 
+_seed_db_if_needed()
 init_db()
 
 @mcp.tool()
