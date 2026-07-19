@@ -107,10 +107,18 @@ def init_db():
             summary TEXT DEFAULT '',
             raw_text TEXT DEFAULT '',
             file_urls TEXT DEFAULT '',
+            difficulties TEXT DEFAULT '',
             created_at TEXT
         )
     """)
     db.commit()
+
+    # Migration: add difficulties column to pre-existing lessons tables
+    try:
+        db.execute("ALTER TABLE lessons ADD COLUMN difficulties TEXT DEFAULT ''")
+        db.commit()
+    except Exception:
+        pass
     
     for korean, filename in IMAGE_MAP.items():
         url = BASE_IMAGE_URL + filename
@@ -657,7 +665,8 @@ def save_lesson(
     homework: str = "",
     summary: str = "",
     raw_text: str = "",
-    file_urls: str = ""
+    file_urls: str = "",
+    difficulties: str = ""
 ) -> dict:
     """
     Saves the structured content extracted from a lesson to the database.
@@ -671,6 +680,9 @@ def save_lesson(
     - summary: structured summary incl. descriptions of visual exercises
     - raw_text: full extracted transcript text
     - file_urls: comma-separated GitHub raw URLs of the original files
+    - difficulties: things the student struggled with this lesson (from the
+      transcript, corrected homework, or the student's own report). Leave
+      blank when there is no evidence — do NOT guess.
     """
     if not lesson_date:
         return {"error": "lesson_date (YYYY-MM-DD) is required"}
@@ -678,18 +690,19 @@ def save_lesson(
     db = get_db()
     db.execute("""
         INSERT INTO lessons
-            (lesson_date, grammar_points, vocab, homework, summary, raw_text, file_urls, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            (lesson_date, grammar_points, vocab, homework, summary, raw_text, file_urls, difficulties, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(lesson_date) DO UPDATE SET
             grammar_points = CASE WHEN excluded.grammar_points != '' THEN excluded.grammar_points ELSE lessons.grammar_points END,
             vocab          = CASE WHEN excluded.vocab          != '' THEN excluded.vocab          ELSE lessons.vocab END,
             homework       = CASE WHEN excluded.homework       != '' THEN excluded.homework       ELSE lessons.homework END,
             summary        = CASE WHEN excluded.summary        != '' THEN excluded.summary        ELSE lessons.summary END,
             raw_text       = CASE WHEN excluded.raw_text       != '' THEN excluded.raw_text       ELSE lessons.raw_text END,
-            file_urls      = CASE WHEN excluded.file_urls      != '' THEN excluded.file_urls      ELSE lessons.file_urls END
+            file_urls      = CASE WHEN excluded.file_urls      != '' THEN excluded.file_urls      ELSE lessons.file_urls END,
+            difficulties   = CASE WHEN excluded.difficulties   != '' THEN excluded.difficulties   ELSE lessons.difficulties END
     """, (
         lesson_date, grammar_points, vocab, homework, summary, raw_text,
-        file_urls, datetime.now(timezone.utc).isoformat()
+        file_urls, difficulties, datetime.now(timezone.utc).isoformat()
     ))
     db.commit()
  
@@ -725,15 +738,15 @@ def get_lessons(lesson_date: str = "", query: str = "", limit: int = 5) -> list[
     if query:
         like = f"%{query}%"
         rows = db.execute("""
-            SELECT id, lesson_date, grammar_points, vocab, homework, summary, file_urls
+            SELECT id, lesson_date, grammar_points, vocab, homework, summary, difficulties, file_urls
             FROM lessons
-            WHERE grammar_points LIKE ? OR vocab LIKE ? OR homework LIKE ? OR summary LIKE ?
+            WHERE grammar_points LIKE ? OR vocab LIKE ? OR homework LIKE ? OR summary LIKE ? OR difficulties LIKE ?
             ORDER BY lesson_date DESC LIMIT ?
-        """, (like, like, like, like, limit)).fetchall()
+        """, (like, like, like, like, like, limit)).fetchall()
         return [dict(r) for r in rows]
  
     rows = db.execute("""
-        SELECT id, lesson_date, grammar_points, vocab, homework, summary, file_urls
+        SELECT id, lesson_date, grammar_points, vocab, homework, summary, difficulties, file_urls
         FROM lessons
         ORDER BY lesson_date DESC LIMIT ?
     """, (limit,)).fetchall()
