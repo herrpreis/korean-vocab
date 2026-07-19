@@ -661,8 +661,10 @@ def save_lesson(
 ) -> dict:
     """
     Saves the structured content extracted from a lesson to the database.
-    One row per lesson_date (YYYY-MM-DD); saving again for the same date
-    updates the existing entry. Fields:
+    One row per lesson_date (YYYY-MM-DD). Saving again for the same date
+    MERGES: any field you pass updates that field; any field left blank
+    keeps its existing stored value (so a partial save never wipes the
+    rest of the record). To change a field, pass the new value. Fields:
     - grammar_points: comma-separated patterns, e.g. "-(으)니까, -았/었으면 좋겠다"
     - vocab: comma-separated Korean words covered
     - homework: the homework task(s) as text
@@ -679,12 +681,12 @@ def save_lesson(
             (lesson_date, grammar_points, vocab, homework, summary, raw_text, file_urls, created_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(lesson_date) DO UPDATE SET
-            grammar_points = excluded.grammar_points,
-            vocab = excluded.vocab,
-            homework = excluded.homework,
-            summary = excluded.summary,
-            raw_text = excluded.raw_text,
-            file_urls = excluded.file_urls
+            grammar_points = CASE WHEN excluded.grammar_points != '' THEN excluded.grammar_points ELSE lessons.grammar_points END,
+            vocab          = CASE WHEN excluded.vocab          != '' THEN excluded.vocab          ELSE lessons.vocab END,
+            homework       = CASE WHEN excluded.homework       != '' THEN excluded.homework       ELSE lessons.homework END,
+            summary        = CASE WHEN excluded.summary        != '' THEN excluded.summary        ELSE lessons.summary END,
+            raw_text       = CASE WHEN excluded.raw_text       != '' THEN excluded.raw_text       ELSE lessons.raw_text END,
+            file_urls      = CASE WHEN excluded.file_urls      != '' THEN excluded.file_urls      ELSE lessons.file_urls END
     """, (
         lesson_date, grammar_points, vocab, homework, summary, raw_text,
         file_urls, datetime.now(timezone.utc).isoformat()
