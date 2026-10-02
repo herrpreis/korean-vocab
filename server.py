@@ -113,6 +113,15 @@ def init_db():
         except Exception:
             pass
 
+    # When a card was added. Existing rows predate this column and stay
+    # blank - there is no way to recover a real date for them - but every
+    # card added from here on gets a real UTC timestamp.
+    try:
+        db.execute("ALTER TABLE words ADD COLUMN created_at TEXT DEFAULT ''")
+        db.commit()
+    except Exception:
+        pass
+
     db.execute("""
         CREATE TABLE IF NOT EXISTS lessons (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -248,7 +257,7 @@ def get_due_cards(limit: int = 5) -> list[dict]:
     db = get_db()
     rows = db.execute("""
         SELECT w.id, w.korean, w.english, w.type, w.topic, w.example,
-               w.usage, w.formation, w.sentences, w.translations, w.notes, w.image_url
+               w.usage, w.formation, w.sentences, w.translations, w.notes, w.image_url, w.created_at
         FROM words w
         JOIN card_state cs ON w.id = cs.word_id
         WHERE cs.due_date <= ?
@@ -343,11 +352,12 @@ def add_word(
       - notes: irregular forms, negative form, common mistakes
     """
     db = get_db()
+    created_at = datetime.now(timezone.utc).isoformat()
     cur = db.execute(
         """INSERT INTO words
-           (korean, english, type, topic, example, image_url, usage, formation, sentences, translations, notes)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-        (korean, english, type, topic, example, image_url, usage, formation, sentences, translations, notes)
+           (korean, english, type, topic, example, image_url, usage, formation, sentences, translations, notes, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (korean, english, type, topic, example, image_url, usage, formation, sentences, translations, notes, created_at)
     )
     word_id = cur.lastrowid
     db.execute(
@@ -434,7 +444,7 @@ def get_cards_by_type(type: str, limit: int = 10) -> list[dict]:
     db = get_db()
     rows = db.execute(
         """SELECT id, korean, english, type, topic, example,
-           usage, formation, sentences, translations, notes, image_url
+           usage, formation, sentences, translations, notes, image_url, created_at
            FROM words WHERE type = ? LIMIT ?""",
         (type, limit)
     ).fetchall()
@@ -446,7 +456,7 @@ def get_cards_by_topic(topic: str, limit: int = 10) -> list[dict]:
     db = get_db()
     rows = db.execute(
         """SELECT id, korean, english, type, topic, example,
-           usage, formation, sentences, translations, notes, image_url
+           usage, formation, sentences, translations, notes, image_url, created_at
            FROM words WHERE topic LIKE ? LIMIT ?""",
         (f"%{topic}%", limit)
     ).fetchall()
@@ -458,7 +468,7 @@ def search_cards(query: str, limit: int = 10) -> list[dict]:
     db = get_db()
     rows = db.execute(
         """SELECT id, korean, english, type, topic, example,
-           usage, formation, sentences, translations, notes, image_url
+           usage, formation, sentences, translations, notes, image_url, created_at
            FROM words WHERE korean LIKE ? OR english LIKE ? LIMIT ?""",
         (f"%{query}%", f"%{query}%", limit)
     ).fetchall()
@@ -475,20 +485,20 @@ def generate_test(type: str = "vocab", topic: str = "", limit: int = 5) -> dict:
     if topic:
         words = db.execute(
             """SELECT id, korean, english, type, topic, example,
-               usage, formation, sentences, translations, notes, image_url
+               usage, formation, sentences, translations, notes, image_url, created_at
                FROM words WHERE type = ? AND topic LIKE ? LIMIT ?""",
             (type, f"%{topic}%", limit)
         ).fetchall()
     else:
         words = db.execute(
             """SELECT id, korean, english, type, topic, example,
-               usage, formation, sentences, translations, notes, image_url
+               usage, formation, sentences, translations, notes, image_url, created_at
                FROM words WHERE type = ? LIMIT ?""",
             (type, limit)
         ).fetchall()
     grammar = db.execute(
         """SELECT id, korean, english, type, topic, example,
-           usage, formation, sentences, translations, notes, image_url
+           usage, formation, sentences, translations, notes, image_url, created_at
            FROM words WHERE type = 'grammar' LIMIT 3"""
     ).fetchall()
     return {
