@@ -392,6 +392,7 @@ def update_grammar(
 @mcp.tool()
 def update_word(
     word_id: int,
+    korean: str = "",
     english: str = "",
     topic: str = "",
     example: str = "",
@@ -402,10 +403,12 @@ def update_word(
     Partially updates an existing vocab/phrase card. Only pass the fields
     you want to change - any field left blank/omitted keeps its current
     value (unlike update_grammar, which overwrites all its fields
-    unconditionally). Use this to add a mnemonic, fix a meaning/topic, or
-    attach an image to a word that already exists in the deck.
+    unconditionally). Use this to add a mnemonic, fix a meaning/topic,
+    correct the Korean text itself, or attach an image to a word that
+    already exists in the deck.
     """
     fields = {
+        "korean": korean,
         "english": english,
         "topic": topic,
         "example": example,
@@ -422,6 +425,44 @@ def update_word(
     db.execute(f"UPDATE words SET {set_clause} WHERE id=?", values)
     db.commit()
     return {"success": True, "word_id": word_id, "updated_fields": list(updates.keys())}
+
+@mcp.tool()
+def delete_word(word_id: int, confirm: bool = False) -> dict:
+    """
+    Permanently deletes a single flashcard by its id, along with its
+    review history and scheduling state (card_state, reviews rows), so no
+    orphaned data is left behind.
+    Safety: you must pass confirm=True to actually delete. A call without
+    confirm returns a preview of what would be removed so the deletion is
+    always deliberate.
+    """
+    db = get_db()
+    row = db.execute(
+        "SELECT id, korean, english, type FROM words WHERE id = ?",
+        (word_id,)
+    ).fetchone()
+
+    if not row:
+        return {"error": f"No word found with id {word_id}", "deleted": False}
+
+    if not confirm:
+        return {
+            "deleted": False,
+            "needs_confirmation": True,
+            "would_delete": {
+                "id": row["id"],
+                "korean": row["korean"],
+                "english": row["english"],
+                "type": row["type"]
+            },
+            "note": "Call again with confirm=True to permanently delete this card."
+        }
+
+    db.execute("DELETE FROM reviews WHERE word_id = ?", (word_id,))
+    db.execute("DELETE FROM card_state WHERE word_id = ?", (word_id,))
+    db.execute("DELETE FROM words WHERE id = ?", (word_id,))
+    db.commit()
+    return {"deleted": True, "id": word_id}
 
 @mcp.tool()
 def get_deck_summary() -> dict:
