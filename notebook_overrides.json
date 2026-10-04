@@ -1,0 +1,487 @@
+{
+ "3": [
+  {
+   "field": "korean",
+   "from": "따뜻 한 걸로 주세요",
+   "to": "따뜻한 걸로 주세요"
+  }
+ ],
+ "5": [
+  {
+   "field": "korean",
+   "from": "\"한국어 조금 할 수 있어요.(한국어 조금밖에 못해요.)",
+   "to": "한국어 조금 할 수 있어요 (한국어 조금밖에 못해요)"
+  }
+ ],
+ "33": [
+  {
+   "field": "korean",
+   "from": "\"포장해 주세요(태이크아웃 해주세요)",
+   "to": "포장해 주세요 (테이크아웃 해주세요)"
+  }
+ ],
+ "42": [
+  {
+   "field": "korean",
+   "from": "\"",
+   "to": "오랜만입니다 (오랜만이에요)"
+  }
+ ],
+ "45": [
+  {
+   "field": "korean",
+   "from": "알겠입니다",
+   "to": "알겠습니다"
+  }
+ ],
+ "62": [
+  {
+   "field": "korean",
+   "from": "\"",
+   "to": "복잡하다"
+  }
+ ],
+ "64": [
+  {
+   "field": "korean",
+   "from": "\"",
+   "to": "동쪽바다"
+  },
+  {
+   "field": "english",
+   "from": "Eastcoast",
+   "to": "East coast"
+  }
+ ],
+ "66": [
+  {
+   "field": "korean",
+   "from": "\"",
+   "to": "북"
+  }
+ ],
+ "68": [
+  {
+   "field": "korean",
+   "from": "\"",
+   "to": "동서남북"
+  }
+ ],
+ "88": [
+  {
+   "field": "korean",
+   "from": "\"",
+   "to": "어렵다"
+  },
+  {
+   "field": "notes",
+   "to": "어렵다 heißt schwierig: Einen Oreo-Keks (어려…) zu öffnen ist gar nicht so leicht – das ist richtig 어렵다!",
+   "only_if_empty": true
+  }
+ ],
+ "103": [
+  {
+   "field": "korean",
+   "from": "\"",
+   "to": "후"
+  }
+ ],
+ "116": [
+  {
+   "field": "korean",
+   "from": "\"",
+   "to": "서른"
+  }
+ ],
+ "121": [
+  {
+   "field": "korean",
+   "from": "주무스다",
+   "to": "주무시다"
+  }
+ ],
+ "124": [
+  {
+   "field": "korean",
+   "from": "소설잭",
+   "to": "소설책"
+  }
+ ],
+ "129": [
+  {
+   "field": "korean",
+   "from": "개벽",
+   "to": "새벽"
+  }
+ ],
+ "16": [
+  {
+   "field": "english",
+   "from": "Does is rain?",
+   "to": "Is it raining?"
+  }
+ ],
+ "78": [
+  {
+   "field": "english",
+   "from": "to look around,",
+   "to": "to look around"
+  }
+ ],
+ "183": [
+  {
+   "field": "english",
+   "from": "kindergarden",
+   "to": "kindergarten"
+  }
+ ],
+ "186": [
+  {
+   "field": "english",
+   "from": "Living romm",
+   "to": "Living room"
+  }
+ ],
+ "89": [
+  {
+   "hide": true,
+   "field": "korean",
+   "from": "\"어렵다 heißt schwierig: Einen Oreo-Keks (어려…) zu öffnen ist gar nicht so leicht – das ist richtig 어렵다!\""
+  }
+ ],
+ "204": [
+  {
+   "field": "korean",
+   "from": "\"-고 싶어요.\"",
+   "to": "-고 싶어요"
+  },
+  {
+   "field": "topic",
+   "to": "Desire & Hope"
+  }
+ ],
+ "207": [
+  {
+   "field": "korean",
+   "from": "N을/를 잘 V (do something well)N을/를 잘 못 V (not so good at something, do something poorly)N을/를 못 V (cannot do something, do something badly)",
+   "to": "N을/를 잘 V / 잘 못 V / 못 V"
+  },
+  {
+   "field": "topic",
+   "to": "Ability & Possibility"
+  }
+ ],
+ "208": [
+  {
+   "field": "korean",
+   "from": "\"Adjective stem + (으)ㄴ\"",
+   "to": "Adjective stem + (으)ㄴ"
+  },
+  {
+   "field": "topic",
+   "to": "Noun-Modifying Clauses"
+  }
+ ],
+ "210": [
+  {
+   "field": "korean",
+   "from": "-한테 (casual, used with peers or those of lower status)-께 (formal/honorific, used with respected or higher-status individuals)-에게 (neutral/formal, often used in writing or neutral contexts)",
+   "to": "-한테 / -께 / -에게"
+  },
+  {
+   "field": "topic",
+   "to": "Particles"
+  }
+ ],
+ "211": [
+  {
+   "field": "korean",
+   "from": "\"-면 / -으면\"",
+   "to": "-면 / -으면"
+  },
+  {
+   "field": "topic",
+   "to": "Connectors"
+  }
+ ],
+ "212": [
+  {
+   "field": "korean",
+   "from": "-(으)ㄹ 수 있다 (can do)-(으)ㄹ 수 없다 (cannot do)",
+   "to": "-(으)ㄹ 수 있다 / -(으)ㄹ 수 없다"
+  },
+  {
+   "field": "topic",
+   "to": "Ability & Possibility"
+  }
+ ],
+ "214": [
+  {
+   "field": "korean",
+   "from": "Adjective stem + -ㄴ (if stem ends in a vowel)Adjective stem + -은 (if stem ends in a consonant)",
+   "to": "Adjective stem + -ㄴ / -은"
+  },
+  {
+   "field": "topic",
+   "to": "Noun-Modifying Clauses"
+  }
+ ],
+ "220": [
+  {
+   "field": "korean",
+   "from": "-라고 하다 (for quoting or naming)",
+   "to": "-라고 하다"
+  },
+  {
+   "field": "topic",
+   "to": "Quoting & Embedded Clauses"
+  },
+  {
+   "field": "sentences",
+   "replace": [
+    "맛있라고",
+    "맛있다고"
+   ]
+  }
+ ],
+ "229": [
+  {
+   "field": "korean",
+   "from": "Adjective: A-(으)ᄂ데Verb: V-는데Noun: N인데",
+   "to": "A-(으)ㄴ데 / V-는데 / N인데"
+  },
+  {
+   "field": "topic",
+   "to": "Connectors"
+  }
+ ],
+ "265": [
+  {
+   "field": "korean",
+   "from": "V-는지 알다[모르다], N인지 알다[모르다]",
+   "to": "V-는지 알다[모르다] / N인지 알다[모르다]"
+  },
+  {
+   "field": "topic",
+   "to": "Quoting & Embedded Clauses"
+  }
+ ],
+ "198": [
+  {
+   "field": "topic",
+   "to": "Future & Intention"
+  }
+ ],
+ "199": [
+  {
+   "field": "topic",
+   "to": "Sentence Endings"
+  }
+ ],
+ "200": [
+  {
+   "field": "topic",
+   "to": "Sentence Endings"
+  }
+ ],
+ "201": [
+  {
+   "field": "topic",
+   "to": "Obligation & Necessity"
+  }
+ ],
+ "202": [
+  {
+   "field": "topic",
+   "to": "Connectors"
+  }
+ ],
+ "203": [
+  {
+   "field": "topic",
+   "to": "Requests & Favors"
+  }
+ ],
+ "205": [
+  {
+   "field": "topic",
+   "to": "Sentence Endings"
+  }
+ ],
+ "206": [
+  {
+   "field": "topic",
+   "to": "Future & Intention"
+  }
+ ],
+ "209": [
+  {
+   "field": "topic",
+   "to": "Requests & Favors"
+  }
+ ],
+ "213": [
+  {
+   "field": "topic",
+   "to": "Noun-Modifying Clauses"
+  }
+ ],
+ "215": [
+  {
+   "field": "topic",
+   "to": "Sentence Endings"
+  }
+ ],
+ "216": [
+  {
+   "field": "topic",
+   "to": "Sentence Endings"
+  }
+ ],
+ "217": [
+  {
+   "field": "topic",
+   "to": "Sentence Endings"
+  }
+ ],
+ "218": [
+  {
+   "field": "topic",
+   "to": "Future & Intention"
+  }
+ ],
+ "219": [
+  {
+   "field": "topic",
+   "to": "Connectors"
+  }
+ ],
+ "221": [
+  {
+   "field": "topic",
+   "to": "Connectors"
+  }
+ ],
+ "222": [
+  {
+   "field": "topic",
+   "to": "Connectors"
+  }
+ ],
+ "223": [
+  {
+   "field": "topic",
+   "to": "Nominalization"
+  }
+ ],
+ "224": [
+  {
+   "field": "topic",
+   "to": "Ability & Possibility"
+  }
+ ],
+ "225": [
+  {
+   "field": "topic",
+   "to": "Noun-Modifying Clauses"
+  }
+ ],
+ "227": [
+  {
+   "field": "topic",
+   "to": "Negation"
+  }
+ ],
+ "228": [
+  {
+   "field": "topic",
+   "to": "Requests & Favors"
+  }
+ ],
+ "230": [
+  {
+   "field": "topic",
+   "to": "Noun-Modifying Clauses"
+  }
+ ],
+ "231": [
+  {
+   "field": "topic",
+   "to": "Speculation & Guessing"
+  }
+ ],
+ "232": [
+  {
+   "field": "topic",
+   "to": "Particles"
+  }
+ ],
+ "233": [
+  {
+   "field": "topic",
+   "to": "Desire & Hope"
+  }
+ ],
+ "234": [
+  {
+   "field": "topic",
+   "to": "Speculation & Guessing"
+  }
+ ],
+ "235": [
+  {
+   "field": "topic",
+   "to": "Speculation & Guessing"
+  }
+ ],
+ "236": [
+  {
+   "field": "topic",
+   "to": "Connectors"
+  },
+  {
+   "field": "sentences",
+   "replace": [
+    "춥니까 밖에",
+    "추우니까 밖에"
+   ]
+  },
+  {
+   "field": "sentences",
+   "replace": [
+    "멀니까",
+    "머니까"
+   ]
+  }
+ ],
+ "237": [
+  {
+   "field": "topic",
+   "to": "Connectors"
+  }
+ ],
+ "238": [
+  {
+   "field": "topic",
+   "to": "Particles"
+  }
+ ],
+ "239": [
+  {
+   "field": "topic",
+   "to": "Connectors"
+  }
+ ],
+ "240": [
+  {
+   "field": "topic",
+   "to": "Connectors"
+  }
+ ],
+ "241": [
+  {
+   "field": "topic",
+   "to": "Obligation & Necessity"
+  }
+ ]
+}

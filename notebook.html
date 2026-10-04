@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>한국어 노트 — Korean Notebook</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📖%3C/text%3E%3C/svg%3E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="한국어 노트">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #EFEAE0;
+  --paper-card: #FBF8F2;
+  --ink: #16213A;
+  --ink-soft: #3A4358;
+  --muted: #6B6558;
+  --hairline: #D8D0BE;
+  --seal: #B23A2E;
+  --seal-soft: #E8D9CF;
+  --jade: #3F6659;
+  --jade-soft: #DDE6DE;
+  --focus: #2F5EA8;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+:root:not([data-theme="light"]) {
+  @media (prefers-color-scheme: dark) {
+    --paper: #1B1B22;
+    --paper-card: #24242D;
+    --ink: #EDE8DE;
+    --ink-soft: #C9C3B4;
+    --muted: #948E7E;
+    --hairline: #3A3A44;
+    --seal: #D9695A;
+    --seal-soft: #3A2723;
+    --jade: #6FA08F;
+    --jade-soft: #22322C;
+    --focus: #6FA0D9;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #1B1B22;
+  --paper-card: #24242D;
+  --ink: #EDE8DE;
+  --ink-soft: #C9C3B4;
+  --muted: #948E7E;
+  --hairline: #3A3A44;
+  --seal: #D9695A;
+  --seal-soft: #3A2723;
+  --jade: #6FA08F;
+  --jade-soft: #22322C;
+  --focus: #6FA0D9;
+}
+* { box-sizing: border-box; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Libre Franklin', system-ui, sans-serif;
+  min-height: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+.kr { font-family: 'Noto Serif KR', serif; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.wrap {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 28px 20px 80px;
+}
+header.top {
+  margin-bottom: 22px;
+}
+header.top h1 {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0 0 2px;
+  letter-spacing: 0.01em;
+}
+header.top p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Category tabs — library card-catalogue style, not pills */
+nav.categories {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--hairline);
+  margin-top: 26px;
+}
+nav.categories button {
+  appearance: none;
+  background: none;
+  border: none;
+  font-family: 'Libre Franklin', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--muted);
+  padding: 10px 4px;
+  margin-right: 26px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transform: translateY(1px);
+}
+nav.categories button:hover { color: var(--ink); }
+nav.categories button.active {
+  color: var(--ink);
+  border-bottom-color: var(--seal);
+}
+nav.categories button .count {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 13px;
+}
+
+/* Controls row: mode switch, search, topic filter */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 18px 0 24px;
+}
+.mode-switch {
+  display: inline-flex;
+  border: 1px solid var(--hairline);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.mode-switch button {
+  appearance: none;
+  background: var(--paper-card);
+  border: none;
+  font-family: 'Libre Franklin', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  padding: 7px 14px;
+  cursor: pointer;
+}
+.mode-switch button + button { border-left: 1px solid var(--hairline); }
+.mode-switch button.active { background: var(--ink); color: var(--paper-card); }
+
+.controls input[type="search"], .controls select {
+  font-family: 'Libre Franklin', sans-serif;
+  font-size: 13px;
+  padding: 7px 10px;
+  border: 1px solid var(--hairline);
+  border-radius: 3px;
+  background: var(--paper-card);
+  color: var(--ink);
+}
+.controls input[type="search"] { flex: 1 1 160px; min-width: 120px; }
+.controls .spacer { flex: 1 1 auto; }
+.controls .result-count { color: var(--muted); font-size: 13px; white-space: nowrap; }
+
+/* Browse: entry cards, notebook index-card feel */
+.entries { display: flex; flex-direction: column; gap: 14px; }
+.entry {
+  background: var(--paper-card);
+  border: 1px solid var(--hairline);
+  border-radius: 4px;
+  padding: 18px 20px;
+}
+.entry .head {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 18px;
+  align-items: baseline;
+}
+.entry-grammar .head { grid-template-columns: 300px 1fr; }
+.entry-vocab .head, .entry-phrase .head { grid-template-columns: 210px 1fr; }
+.entry .head .en-main {
+  text-align: right;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.entry .meta-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.entry .meta-row .topic-tag { margin-left: 0; }
+.entry .kr-main { font-family: 'Noto Serif KR', serif; font-size: 21px; font-weight: 600; line-height: 1.4; }
+.entry .en-main { color: var(--ink-soft); font-size: 15px; }
+.entry .topic-tag {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--jade);
+  background: var(--jade-soft);
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+.entry img.mnemonic {
+  display: block;
+  margin-top: 10px;
+  max-width: 140px;
+  max-height: 140px;
+  border-radius: 3px;
+  border: 1px solid var(--hairline);
+}
+.entry .usage { margin-top: 10px; font-size: 14px; color: var(--ink-soft); line-height: 1.55; }
+.entry .formation, .entry .sentences {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.entry .sentences .line { display: flex; gap: 8px; }
+.entry .sentences .kr-sent { font-family: 'Noto Serif KR', serif; }
+.entry .sentences .en-sent { color: var(--muted); }
+.entry .sentences .line::before { content: "–"; color: var(--hairline); flex: none; }
+.entry .note {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--jade);
+  background: var(--jade-soft);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  border-radius: 0 3px 3px 0;
+}
+.entry .note.flag {
+  border-left-color: var(--seal);
+  background: var(--seal-soft);
+}
+.empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Quiz mode */
+.quiz-wrap { display: flex; flex-direction: column; align-items: center; }
+.quiz-progress {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.quiz-card {
+  width: 100%;
+  max-width: 520px;
+  min-height: 260px;
+  background: var(--paper-card);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 14px;
+}
+.quiz-card .topic-tag {
+  font-size: 11.5px;
+  color: var(--jade);
+  background: var(--jade-soft);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.quiz-card .prompt-en {
+  font-size: 19px;
+  color: var(--ink);
+  line-height: 1.5;
+}
+.quiz-card .prompt-kr {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.quiz-card .reveal-answer {
+  margin-top: 6px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--hairline);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.quiz-card .reveal-answer .kr-ans { font-family: 'Noto Serif KR', serif; font-size: 26px; font-weight: 600; }
+.quiz-card .reveal-answer .en-ans { font-size: 16px; color: var(--ink-soft); }
+.quiz-card img.mnemonic { max-width: 120px; max-height: 120px; border-radius: 3px; border: 1px solid var(--hairline); }
+.quiz-card .note { text-align: left; width: 100%; margin-top: 4px; padding: 8px 12px; border-left: 3px solid var(--jade); background: var(--jade-soft); font-size: 13px; line-height: 1.5; color: var(--ink-soft); border-radius: 0 3px 3px 0; }
+.quiz-card .note.flag { border-left-color: var(--seal); background: var(--seal-soft); }
+.quiz-card .usage-small { font-size: 13px; color: var(--muted); line-height: 1.5; text-align: left; width: 100%; }
+
+.quiz-actions { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; justify-content: center; }
+.quiz-actions button {
+  appearance: none;
+  border: 1px solid var(--hairline);
+  background: var(--paper-card);
+  color: var(--ink);
+  font-family: 'Libre Franklin', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.quiz-actions button.primary { background: var(--ink); color: var(--paper-card); border-color: var(--ink); }
+.quiz-actions button.knew { border-color: var(--jade); color: var(--jade); }
+.quiz-actions button.didnt { border-color: var(--seal); color: var(--seal); }
+.quiz-actions button:hover { filter: brightness(0.97); }
+
+.quiz-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.quiz-score { font-size: 13px; color: var(--muted); margin-top: 16px; }
+
+.direction-switch { display: inline-flex; border: 1px solid var(--hairline); border-radius: 3px; overflow: hidden; }
+.direction-switch button { appearance: none; background: var(--paper-card); border: none; font-size: 12.5px; padding: 6px 10px; cursor: pointer; color: var(--muted); }
+.direction-switch button + button { border-left: 1px solid var(--hairline); }
+.direction-switch button.active { background: var(--jade); color: var(--paper-card); }
+
+img.mnemonic { cursor: zoom-in; }
+.date-tag { font-size: 11.5px; color: var(--muted); border: 1px solid var(--hairline); padding: 1px 8px; border-radius: 10px; white-space: nowrap; }
+
+.img-modal-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(22, 33, 58, 0.78);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.img-modal-backdrop.open { display: flex; }
+.img-modal-box {
+  position: relative;
+  max-width: min(92vw, 640px);
+  max-height: 88vh;
+  background: var(--paper-card);
+  border-radius: 6px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.img-modal-box img {
+  max-width: 100%;
+  max-height: 72vh;
+  border-radius: 3px;
+  display: block;
+}
+.img-modal-close {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--paper-card);
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* Practice mode */
+.practice-intro { color: var(--muted); font-size: 13px; margin: -6px 0 16px; line-height: 1.55; }
+.pattern-mask { font-family: 'Noto Serif KR', serif; font-size: 21px; font-weight: 600; color: var(--hairline); letter-spacing: 0.25em; }
+.link-btn { appearance: none; background: none; border: none; padding: 0; margin-left: 10px; font-family: 'Libre Franklin', sans-serif; font-size: 12.5px; color: var(--jade); text-decoration: underline; cursor: pointer; }
+.practice-ref { margin-top: 12px; }
+.practice-item { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--hairline); }
+.practice-prompt { font-size: 15.5px; line-height: 1.5; color: var(--ink); }
+.practice-prompt .num { color: var(--muted); font-size: 12.5px; margin-right: 8px; }
+.practice-row { display: flex; gap: 8px; margin-top: 9px; }
+.practice-row input[type="text"] {
+  flex: 1; min-width: 0;
+  font-family: 'Noto Serif KR', serif; font-size: 16px;
+  padding: 9px 11px; border: 1px solid var(--hairline); border-radius: 3px;
+  background: var(--paper); color: var(--ink);
+}
+.practice-row button.check {
+  appearance: none; border: 1px solid var(--ink); background: var(--ink); color: var(--paper-card);
+  font-family: 'Libre Franklin', sans-serif; font-size: 13.5px; font-weight: 500;
+  padding: 0 16px; border-radius: 3px; cursor: pointer;
+}
+.practice-feedback { margin-top: 9px; padding: 9px 12px; font-size: 14px; line-height: 1.6; border-left: 3px solid var(--hairline); border-radius: 0 3px 3px 0; }
+.practice-feedback.ok { border-left-color: var(--jade); background: var(--jade-soft); }
+.practice-feedback.no { border-left-color: var(--seal); background: var(--seal-soft); }
+.practice-feedback .verdict { font-weight: 600; }
+.practice-feedback .line { margin-top: 4px; }
+.practice-feedback .line .label { color: var(--muted); font-size: 12px; margin-right: 8px; }
+.practice-feedback .kr { font-size: 16px; }
+.practice-feedback .bad { color: var(--seal); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.practice-score { margin-top: 14px; font-size: 12.5px; color: var(--muted); }
+
+footer.note {
+  margin-top: 44px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hairline);
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+@media (max-width: 480px) {
+  .wrap { padding: 20px 14px 60px; }
+  header.top h1 { font-size: 24px; }
+  nav.categories button { margin-right: 16px; font-size: 14px; }
+  .quiz-card { padding: 24px 18px; min-height: 220px; }
+  .quiz-card .prompt-kr { font-size: 25px; }
+}
+</style>
+</head>
+<body>
+<div class="img-modal-backdrop" id="imgModalBackdrop">
+  <div class="img-modal-box">
+    <button class="img-modal-close" id="imgModalClose" aria-label="Close">&times;</button>
+    <img id="imgModalImg" src="" alt="">
+  </div>
+</div>
+
+<div class="wrap">
+
+  <header class="top">
+    <h1 class="kr">한국어 노트</h1>
+    <p>Korean Notebook — your grammar, vocab, and phrases, in one place</p>
+  </header>
+
+  <nav class="categories" id="categoryNav"></nav>
+
+  <div class="controls" id="controlsRow"></div>
+
+  <div id="content"></div>
+
+  <footer class="note">
+    Live from your Korean Vocab Bot deck: cards you add show up when you reload this page.
+    This page is read-only; to change a card, ask Claude.
+  </footer>
+
+</div>
+
+<script>
+const DATA = __NOTEBOOK_DATA__;
+
+const CATEGORY_LABELS = { grammar: 'Grammar', vocab: 'Vocabulary', phrase: 'Phrases' };
+const state = {
+  category: 'grammar',
+  mode: 'browse',
+  search: '',
+  topic: '',
+  quizOrder: [],
+  quizIndex: 0,
+  revealed: false,
+  direction: 'kr2en', // for vocab/phrase quiz
+  score: { knew: 0, didnt: 0 },
+  practice: { answers: {}, results: {}, revealed: {}, autoShown: {} }
+};
+
+function currentDeck() {
+  return DATA[state.category] || [];
+}
+
+function topicsFor(deck) {
+  const set = new Set();
+  deck.forEach(c => { if (c.topic) set.add(c.topic); });
+  return Array.from(set).sort();
+}
+
+function filteredDeck() {
+  let deck = currentDeck();
+  if (state.topic) deck = deck.filter(c => c.topic === state.topic);
+  if (state.search.trim()) {
+    const q = state.search.trim().toLowerCase();
+    deck = deck.filter(c =>
+      (c.korean && c.korean.toLowerCase().includes(q)) ||
+      (c.english && c.english.toLowerCase().includes(q))
+    );
+  }
+  return deck;
+}
+
+function esc(s) {
+  return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderCategoryNav() {
+  const nav = document.getElementById('categoryNav');
+  nav.innerHTML = '';
+  Object.keys(CATEGORY_LABELS).forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = cat === state.category ? 'active' : '';
+    btn.innerHTML = `${CATEGORY_LABELS[cat]} <span class="count">${DATA[cat].length}</span>`;
+    btn.addEventListener('click', () => {
+      state.category = cat;
+      state.topic = '';
+      state.search = '';
+      resetQuiz();
+      renderAll();
+    });
+    nav.appendChild(btn);
+  });
+}
+
+function renderControls() {
+  const row = document.getElementById('controlsRow');
+  row.innerHTML = '';
+
+  const modeSwitch = document.createElement('div');
+  modeSwitch.className = 'mode-switch';
+  const MODES = ['browse', 'quiz', 'practice'];
+  const MODE_LABELS = { browse: 'Browse', quiz: 'Quiz', practice: 'Practice' };
+  MODES.forEach(m => {
+    const b = document.createElement('button');
+    b.textContent = MODE_LABELS[m];
+    b.className = state.mode === m ? 'active' : '';
+    b.addEventListener('click', () => {
+      state.mode = m;
+      if (m !== 'browse') state.search = '';
+      if (m === 'quiz') resetQuiz();
+      renderAll();
+    });
+    modeSwitch.appendChild(b);
+  });
+  row.appendChild(modeSwitch);
+
+  const topics = topicsFor(currentDeck());
+  if (topics.length > 1) {
+    const sel = document.createElement('select');
+    const optAll = document.createElement('option');
+    optAll.value = ''; optAll.textContent = 'All topics';
+    sel.appendChild(optAll);
+    topics.forEach(t => {
+      const o = document.createElement('option');
+      o.value = t; o.textContent = t;
+      if (t === state.topic) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.addEventListener('change', () => {
+      state.topic = sel.value;
+      if (state.mode === 'quiz') resetQuiz();
+      renderAll();
+    });
+    row.appendChild(sel);
+  }
+
+  if (state.mode === 'browse') {
+    const search = document.createElement('input');
+    search.type = 'search';
+    search.placeholder = 'Search Korean or English…';
+    search.value = state.search;
+    search.addEventListener('input', () => {
+      state.search = search.value;
+      renderContent();
+    });
+    row.appendChild(search);
+  }
+
+  if (state.mode === 'quiz' && state.category !== 'grammar') {
+    const dir = document.createElement('div');
+    dir.className = 'direction-switch';
+    const b1 = document.createElement('button');
+    b1.textContent = '한 → EN';
+    b1.className = state.direction === 'kr2en' ? 'active' : '';
+    b1.addEventListener('click', () => { state.direction = 'kr2en'; resetQuiz(); renderAll(); });
+    const b2 = document.createElement('button');
+    b2.textContent = 'EN → 한';
+    b2.className = state.direction === 'en2kr' ? 'active' : '';
+    b2.addEventListener('click', () => { state.direction = 'en2kr'; resetQuiz(); renderAll(); });
+    dir.appendChild(b1); dir.appendChild(b2);
+    row.appendChild(dir);
+  }
+
+  const spacer = document.createElement('div');
+  spacer.className = 'spacer';
+  row.appendChild(spacer);
+
+  if (state.mode === 'browse') {
+    const count = document.createElement('div');
+    count.className = 'result-count';
+    count.textContent = `${filteredDeck().length} entries`;
+    row.appendChild(count);
+  }
+}
+
+function renderContent() {
+  if (state.mode === 'browse') renderBrowse();
+  else if (state.mode === 'practice') renderPractice();
+  else renderQuiz();
+}
+
+function renderBrowse() {
+  const content = document.getElementById('content');
+  // Default order: most recently added first. There's no real "date added"
+  // field in the underlying data, so id (which only ever increases) is used
+  // as a reliable stand-in for recency.
+  const deck = filteredDeck().slice().sort((a, b) => b.id - a.id);
+  if (deck.length === 0) {
+    content.innerHTML = '<div class="empty-state">Nothing matches — try a different search or topic.</div>';
+    return;
+  }
+  const wrap = document.createElement('div');
+  wrap.className = 'entries';
+  deck.forEach(c => wrap.appendChild(renderEntry(c)));
+  content.innerHTML = '';
+  content.appendChild(wrap);
+}
+
+function addedLabel(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return isNaN(d) ? '' : d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+}
+
+function renderEntry(c) {
+  const el = document.createElement('div');
+  el.className = 'entry entry-' + state.category;
+
+  const head = document.createElement('div');
+  head.className = 'head';
+  head.innerHTML = `
+    <span class="kr-main kr">${esc(c.korean)}</span>
+    <span class="en-main">${esc(c.english)}</span>
+  `;
+  el.appendChild(head);
+
+  const tags = [];
+  if (c.topic) tags.push(`<span class="topic-tag">${esc(c.topic)}</span>`);
+  const added = addedLabel(c.created_at);
+  if (added) tags.push(`<span class="date-tag">Added ${esc(added)}</span>`);
+  if (tags.length) {
+    const meta = document.createElement('div');
+    meta.className = 'meta-row';
+    meta.innerHTML = tags.join('');
+    el.appendChild(meta);
+  }
+
+  if (c.image_url) {
+    const img = document.createElement('img');
+    img.className = 'mnemonic';
+    img.src = c.image_url;
+    img.alt = 'mnemonic image for ' + c.korean;
+    img.loading = 'lazy';
+    img.addEventListener('click', () => openImageModal(c.image_full || c.image_url, img.alt, c.image_url));
+    el.appendChild(img);
+  }
+
+  if (state.category === 'grammar') {
+    if (c.usage) {
+      const u = document.createElement('div');
+      u.className = 'usage';
+      u.textContent = c.usage;
+      el.appendChild(u);
+    }
+    if (c.formation) {
+      const f = document.createElement('div');
+      f.className = 'formation';
+      f.innerHTML = c.formation.split('\n').filter(Boolean).map(line =>
+        `<div class="kr">${esc(line)}</div>`
+      ).join('');
+      el.appendChild(f);
+    }
+    if (c.sentences) {
+      const sArr = c.sentences.split('\n').filter(Boolean);
+      const tArr = (c.translations || '').split('\n').filter(Boolean);
+      if (sArr.length) {
+        const s = document.createElement('div');
+        s.className = 'sentences';
+        s.innerHTML = sArr.map((sent, i) =>
+          `<div class="line"><span class="kr-sent kr">${esc(sent)}</span>${tArr[i] ? `<span class="en-sent">— ${esc(tArr[i])}</span>` : ''}</div>`
+        ).join('');
+        el.appendChild(s);
+      }
+    }
+  }
+
+  if (c.notes) {
+    const n = document.createElement('div');
+    const flagged = c.notes.includes('⚠');
+    n.className = 'note' + (flagged ? ' flag' : '');
+    n.textContent = c.notes;
+    el.appendChild(n);
+  }
+
+  return el;
+}
+
+function resetQuiz() {
+  const deck = filteredDeck().length ? filteredDeck() : currentDeck();
+  const order = deck.map((_, i) => i);
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  state.quizOrder = order;
+  state.quizIndex = 0;
+  state.revealed = false;
+  state.score = { knew: 0, didnt: 0 };
+}
+
+function renderQuiz() {
+  const content = document.getElementById('content');
+  const deck = filteredDeck().length ? filteredDeck() : currentDeck();
+  if (deck.length === 0) {
+    content.innerHTML = '<div class="empty-state">No cards to quiz on for this filter.</div>';
+    return;
+  }
+  if (!state.quizOrder.length) resetQuiz();
+  if (state.quizIndex >= state.quizOrder.length) {
+    content.innerHTML = `
+      <div class="quiz-wrap">
+        <div class="quiz-card">
+          <div class="prompt-en">Round finished — ${state.score.knew} knew it, ${state.score.didnt} to review again.</div>
+        </div>
+        <div class="quiz-actions">
+          <button class="primary" id="shuffleAgain">Shuffle again</button>
+        </div>
+      </div>`;
+    document.getElementById('shuffleAgain').addEventListener('click', () => { resetQuiz(); renderQuiz(); });
+    return;
+  }
+
+  const c = deck[state.quizOrder[state.quizIndex]];
+  const isGrammar = state.category === 'grammar';
+  const wrap = document.createElement('div');
+  wrap.className = 'quiz-wrap';
+
+  const progress = document.createElement('div');
+  progress.className = 'quiz-progress';
+  progress.textContent = `Card ${state.quizIndex + 1} of ${deck.length}`;
+  wrap.appendChild(progress);
+
+  const card = document.createElement('div');
+  card.className = 'quiz-card';
+
+  // Determine prompt/answer sides
+  let promptIsKorean;
+  if (isGrammar) {
+    promptIsKorean = false; // grammar always shows English meaning first — never the pattern
+  } else {
+    promptIsKorean = state.direction === 'kr2en';
+  }
+
+  if (c.topic) {
+    const tag = document.createElement('span');
+    tag.className = 'topic-tag';
+    tag.textContent = c.topic;
+    card.appendChild(tag);
+  }
+
+  const promptEl = document.createElement('div');
+  if (promptIsKorean) {
+    promptEl.className = 'prompt-kr kr';
+    promptEl.textContent = c.korean;
+  } else {
+    promptEl.className = 'prompt-en';
+    promptEl.textContent = c.english;
+  }
+  card.appendChild(promptEl);
+
+  if (state.revealed) {
+    const ans = document.createElement('div');
+    ans.className = 'reveal-answer';
+
+    if (promptIsKorean) {
+      const enAns = document.createElement('div');
+      enAns.className = 'en-ans';
+      enAns.textContent = c.english;
+      ans.appendChild(enAns);
+    } else {
+      const krAns = document.createElement('div');
+      krAns.className = 'kr-ans kr';
+      krAns.textContent = c.korean;
+      ans.appendChild(krAns);
+    }
+
+    if (isGrammar && c.usage) {
+      const u = document.createElement('div');
+      u.className = 'usage-small';
+      u.textContent = c.usage;
+      ans.appendChild(u);
+    }
+    if (isGrammar && c.sentences) {
+      const sArr = c.sentences.split('\n').filter(Boolean);
+      const tArr = (c.translations || '').split('\n').filter(Boolean);
+      if (sArr.length) {
+        const s = document.createElement('div');
+        s.className = 'usage-small';
+        s.innerHTML = sArr.slice(0,2).map((sent, i) =>
+          `<div class="kr" style="margin-top:4px;">${esc(sent)}${tArr[i] ? ' — ' + esc(tArr[i]) : ''}</div>`
+        ).join('');
+        ans.appendChild(s);
+      }
+    }
+
+    if (c.image_url) {
+      const img = document.createElement('img');
+      img.className = 'mnemonic';
+      img.src = c.image_url;
+      img.alt = 'mnemonic for ' + c.korean;
+      img.loading = 'lazy';
+      img.addEventListener('click', () => openImageModal(c.image_full || c.image_url, img.alt, c.image_url));
+      ans.appendChild(img);
+    }
+
+    if (c.notes) {
+      const n = document.createElement('div');
+      const flagged = c.notes.includes('⚠');
+      n.className = 'note' + (flagged ? ' flag' : '');
+      n.textContent = c.notes;
+      ans.appendChild(n);
+    }
+
+    card.appendChild(ans);
+  }
+
+  wrap.appendChild(card);
+
+  const actions = document.createElement('div');
+  actions.className = 'quiz-actions';
+
+  if (!state.revealed) {
+    const revealBtn = document.createElement('button');
+    revealBtn.className = 'primary';
+    revealBtn.textContent = 'Reveal answer';
+    revealBtn.addEventListener('click', () => { state.revealed = true; renderQuiz(); });
+    actions.appendChild(revealBtn);
+  } else {
+    const knewBtn = document.createElement('button');
+    knewBtn.className = 'knew';
+    knewBtn.textContent = 'Knew it';
+    knewBtn.addEventListener('click', () => {
+      state.score.knew++;
+      state.quizIndex++;
+      state.revealed = false;
+      renderQuiz();
+    });
+    const didntBtn = document.createElement('button');
+    didntBtn.className = 'didnt';
+    didntBtn.textContent = "Didn't know";
+    didntBtn.addEventListener('click', () => {
+      state.score.didnt++;
+      state.quizIndex++;
+      state.revealed = false;
+      renderQuiz();
+    });
+    actions.appendChild(knewBtn);
+    actions.appendChild(didntBtn);
+  }
+  wrap.appendChild(actions);
+
+  const score = document.createElement('div');
+  score.className = 'quiz-score';
+  score.textContent = `This round: ${state.score.knew} knew, ${state.score.didnt} to review`;
+  wrap.appendChild(score);
+
+  content.innerHTML = '';
+  content.appendChild(wrap);
+}
+
+// A mnemonic picture that fails to load (e.g. a damaged file) is simply left out.
+document.addEventListener('error', (e) => {
+  const el = e.target;
+  if (el && el.tagName === 'IMG' && el.classList && el.classList.contains('mnemonic')) el.remove();
+}, true);
+
+function openImageModal(src, alt, fallback) {
+  const backdrop = document.getElementById('imgModalBackdrop');
+  const img = document.getElementById('imgModalImg');
+  img.onerror = () => {
+    if (fallback && img.src !== new URL(fallback, location.href).href) { img.onerror = null; img.src = fallback; }
+  };
+  img.src = src;
+  img.alt = alt || '';
+  backdrop.classList.add('open');
+}
+function closeImageModal() {
+  document.getElementById('imgModalBackdrop').classList.remove('open');
+}
+document.getElementById('imgModalBackdrop').addEventListener('click', (e) => {
+  if (e.target.id === 'imgModalBackdrop') closeImageModal();
+});
+document.getElementById('imgModalClose').addEventListener('click', closeImageModal);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeImageModal();
+});
+
+/* ---------- Practice mode (Grammar): translate the example sentences ---------- */
+
+function practicePairs(c) {
+  const s = (c.sentences || '').split('\n').map(x => x.trim()).filter(Boolean);
+  const t = (c.translations || '').split('\n').map(x => x.trim()).filter(Boolean);
+  const n = Math.min(s.length, t.length);
+  const pairs = [];
+  for (let i = 0; i < n; i++) pairs.push({ ko: s[i], en: t[i] });
+  return pairs;
+}
+
+// Compare ignoring punctuation and capitalisation; spacing handled separately.
+function normKo(s) {
+  return (s || '')
+    .normalize('NFC')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/[.,!?~…·'"“”‘’「」]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function checkAnswer(typed, model) {
+  const a = normKo(typed), b = normKo(model);
+  if (!a) return 'empty';
+  if (a === b) return 'exact';
+  if (a.replace(/ /g, '') === b.replace(/ /g, '')) return 'spacing';
+  return 'wrong';
+}
+
+// Character-level diff (ignoring spaces) so we can show which syllables differ.
+function diffFlags(a, b) {
+  const A = Array.from(a.replace(/ /g, '')), B = Array.from(b.replace(/ /g, ''));
+  const dp = Array.from({ length: A.length + 1 }, () => new Array(B.length + 1).fill(0));
+  for (let i = A.length - 1; i >= 0; i--)
+    for (let j = B.length - 1; j >= 0; j--)
+      dp[i][j] = A[i] === B[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  const fa = new Array(A.length).fill(true), fb = new Array(B.length).fill(true);
+  let i = 0, j = 0;
+  while (i < A.length && j < B.length) {
+    if (A[i] === B[j]) { fa[i] = false; fb[j] = false; i++; j++; }
+    else if (dp[i + 1][j] >= dp[i][j + 1]) i++;
+    else j++;
+  }
+  return { fa, fb };
+}
+
+function markedHtml(str, flags) {
+  let k = 0, out = '';
+  for (const ch of Array.from(str)) {
+    if (ch === ' ') { out += ' '; continue; }
+    out += flags[k++] ? `<span class="bad">${esc(ch)}</span>` : esc(ch);
+  }
+  return out;
+}
+
+function feedbackHtml(status, typed, model) {
+  if (status === 'exact') return `<div class="verdict">✓ Correct</div>`;
+  if (status === 'spacing')
+    return `<div class="verdict">✓ Correct</div><div class="line"><span class="label">Spacing in the deck</span><span class="kr kr">${esc(normKo(model))}</span></div>`;
+  const a = normKo(typed), b = normKo(model);
+  const { fa, fb } = diffFlags(a, b);
+  return `<div class="verdict">✗ Not an exact match</div>
+    <div class="line"><span class="label">You wrote</span><span class="kr kr">${markedHtml(a, fa)}</span></div>
+    <div class="line"><span class="label">Deck says</span><span class="kr kr">${markedHtml(b, fb)}</span></div>`;
+}
+
+function renderPractice() {
+  if (state.category !== 'grammar') return renderWordPractice();
+  const content = document.getElementById('content');
+  const deck = filteredDeck()
+    .filter(c => practicePairs(c).length > 0)
+    .slice()
+    .sort((a, b) => b.id - a.id);
+  if (deck.length === 0) {
+    content.innerHTML = '<div class="empty-state">No grammar cards with example sentences for this topic.</div>';
+    return;
+  }
+  const intro = document.createElement('div');
+  intro.className = 'practice-intro';
+  intro.textContent = 'Each card shows the English meaning and the example sentences in English. Type the Korean for each one and press Check (or Enter). The pattern stays hidden until you have checked every sentence, or you show it; you can hide it again at any time. Answers are compared with the example sentence saved in your deck, so a correct sentence worded differently can still show as not matching.';
+  const wrap = document.createElement('div');
+  wrap.className = 'entries';
+  deck.forEach(c => wrap.appendChild(renderPracticeCard(c)));
+  content.innerHTML = '';
+  content.appendChild(intro);
+  content.appendChild(wrap);
+}
+
+function practiceDone(c) {
+  const pairs = practicePairs(c);
+  return pairs.every((_, i) => state.practice.results[c.id + ':' + i]);
+}
+
+function renderPracticeCard(c) {
+  const P = state.practice;
+  const pairs = practicePairs(c);
+  const revealed = !!P.revealed[c.id];
+
+  const el = document.createElement('div');
+  el.className = 'entry entry-grammar entry-practice';
+
+  // header: pattern (hidden until revealed) on the left, English meaning on the right
+  const head = document.createElement('div');
+  head.className = 'head';
+  const left = document.createElement('span');
+  if (revealed) {
+    const pat = document.createElement('span');
+    pat.className = 'kr-main kr';
+    pat.textContent = c.korean;
+    const hide = document.createElement('button');
+    hide.className = 'link-btn';
+    hide.textContent = 'Hide pattern';
+    hide.addEventListener('click', () => {
+      P.revealed[c.id] = false;
+      P.autoShown[c.id] = true;
+      el.replaceWith(renderPracticeCard(c));
+    });
+    left.appendChild(pat);
+    left.appendChild(hide);
+  } else {
+    const mask = document.createElement('span');
+    mask.className = 'pattern-mask';
+    mask.textContent = '· · ·';
+    const reveal = document.createElement('button');
+    reveal.className = 'link-btn';
+    reveal.textContent = 'Show pattern';
+    reveal.addEventListener('click', () => {
+      P.revealed[c.id] = true;
+      P.autoShown[c.id] = true;
+      el.replaceWith(renderPracticeCard(c));
+    });
+    left.appendChild(mask);
+    left.appendChild(reveal);
+  }
+  const right = document.createElement('span');
+  right.className = 'en-main';
+  right.textContent = c.english;
+  head.appendChild(left);
+  head.appendChild(right);
+  el.appendChild(head);
+
+  if (c.topic) {
+    const meta = document.createElement('div');
+    meta.className = 'meta-row';
+    meta.innerHTML = `<span class="topic-tag">${esc(c.topic)}</span>`;
+    el.appendChild(meta);
+  }
+
+  // reference (usage / formation / notes) only once the pattern is revealed
+  if (revealed) {
+    const ref = document.createElement('div');
+    ref.className = 'practice-ref';
+    if (c.usage) {
+      const u = document.createElement('div');
+      u.className = 'usage';
+      u.textContent = c.usage;
+      ref.appendChild(u);
+    }
+    if (c.formation) {
+      const f = document.createElement('div');
+      f.className = 'formation';
+      f.innerHTML = c.formation.split('\n').filter(Boolean).map(line => `<div class="kr">${esc(line)}</div>`).join('');
+      ref.appendChild(f);
+    }
+    if (c.notes) {
+      const n = document.createElement('div');
+      n.className = 'note' + (c.notes.includes('⚠') ? ' flag' : '');
+      n.textContent = c.notes;
+      ref.appendChild(n);
+    }
+    el.appendChild(ref);
+  }
+
+  // live "N of M correct" line, kept at the bottom of the card
+  const scoreEl = document.createElement('div');
+  scoreEl.className = 'practice-score';
+  function updateScore() {
+    const checked = pairs.filter((_, i) => P.results[c.id + ':' + i]).length;
+    const ok = pairs.filter((_, i) => {
+      const r = P.results[c.id + ':' + i];
+      return r && r.status !== 'wrong';
+    }).length;
+    scoreEl.textContent = checked ? `${ok} of ${pairs.length} correct so far` : '';
+  }
+
+  // one prompt + text field per example sentence
+  const inputs = [];
+  pairs.forEach((pair, i) => {
+    const key = c.id + ':' + i;
+    const item = document.createElement('div');
+    item.className = 'practice-item';
+
+    const prompt = document.createElement('div');
+    prompt.className = 'practice-prompt';
+    prompt.innerHTML = `<span class="num">${i + 1}</span>${esc(pair.en)}`;
+    item.appendChild(prompt);
+
+    const row = document.createElement('div');
+    row.className = 'practice-row';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.lang = 'ko';
+    input.setAttribute('autocomplete', 'off');
+    input.setAttribute('autocorrect', 'off');
+    input.setAttribute('autocapitalize', 'off');
+    input.setAttribute('spellcheck', 'false');
+    input.placeholder = 'Type the Korean…';
+    input.setAttribute('aria-label', 'Korean translation for: ' + pair.en);
+    input.value = P.answers[key] || '';
+    input.addEventListener('input', () => { P.answers[key] = input.value; });
+    const btn = document.createElement('button');
+    btn.className = 'check';
+    btn.textContent = 'Check';
+    row.appendChild(input);
+    row.appendChild(btn);
+    item.appendChild(row);
+
+    const fb = document.createElement('div');
+    item.appendChild(fb);
+
+    function showResult() {
+      const r = P.results[key];
+      if (!r) { fb.className = ''; fb.innerHTML = ''; return; }
+      fb.className = 'practice-feedback ' + (r.status === 'wrong' ? 'no' : 'ok');
+      fb.innerHTML = feedbackHtml(r.status, r.typed, pair.ko);
+    }
+
+    function doCheck() {
+      const status = checkAnswer(input.value, pair.ko);
+      if (status === 'empty') { input.focus(); return; }
+      P.results[key] = { status, typed: input.value };
+      showResult();
+      updateScore();
+      // all sentences checked -> reveal the pattern and reference
+      if (practiceDone(c) && !P.revealed[c.id] && !P.autoShown[c.id]) {
+        P.autoShown[c.id] = true;
+        P.revealed[c.id] = true;
+        el.replaceWith(renderPracticeCard(c));
+        return;
+      }
+      const next = inputs.slice(i + 1).find(x => !P.results[x.key]);
+      if (next) next.input.focus();
+    }
+
+    btn.addEventListener('click', doCheck);
+    input.addEventListener('keydown', (e) => {
+      // don't submit while a Korean syllable is still being composed
+      if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); doCheck(); }
+    });
+
+    inputs.push({ key, input });
+    showResult();
+    el.appendChild(item);
+  });
+
+  el.appendChild(scoreEl);
+  updateScore();
+  return el;
+}
+
+
+/* ---------- Practice mode (Vocabulary & Phrases): type the Korean for the English ---------- */
+
+// Card 15's saved Korean has a typo (한국에); practise against the corrected form.
+const WORD_FIXES = { 15: '저는 한국어를 배우고 있어요' };
+
+// Hyphens only mark affixes (-부터), so ignore them when comparing.
+function nw(s) { return normKo(s).replace(/-/g, '').replace(/\s+/g, ' ').trim(); }
+
+// Every form we accept for a saved entry, e.g. "비가 와요 (비 와?)" -> both,
+// "여기서 먹고 (마시고) 갈게요" -> eat / drink versions, "한/두/세/네 명이에요" -> each count.
+function expandModel(raw) {
+  const s = raw.trim();
+  const out = new Set([s]);
+  const groups = [...s.matchAll(/\(([^)]*)\)/g)];
+  if (groups.length) {
+    out.add(s.replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, ' ').trim());   // without the bracket
+    out.add(s.replace(/[()]/g, '').replace(/\s+/g, ' ').trim());             // bracket kept, brackets removed
+    groups.forEach(g => {
+      const inner = g[1].trim();
+      const before = s.slice(0, g.index);
+      const after = s.slice(g.index + g[0].length);
+      if (!after.trim() && /\s$/.test(before) && before.trim()) {
+        out.add(inner);                                   // "a (b)": b is a full alternative
+      } else if (/\s$/.test(before) && after.trim()) {
+        const tokens = before.trimEnd().split(' ');       // "x (y) z": y replaces the word before it
+        tokens.pop();
+        out.add(tokens.concat(inner, after.trim().split(' ')).join(' ').trim());
+      }
+    });
+  }
+  const extra = new Set();
+  out.forEach(v => {
+    const g = v.match(/[가-힣]+(?:\/[가-힣]+)+/);
+    if (g) g[0].split('/').forEach(alt => extra.add(v.replace(g[0], alt)));
+  });
+  extra.forEach(v => out.add(v));
+  return [...out].filter(Boolean);
+}
+
+// All accepted answers for a card, including other cards in the same tab with the same English.
+function wordModels(c) {
+  const key = e => e.toLowerCase().replace(/["'.!?,\s]+$/g, '').trim();
+  const mine = key(c.english);
+  const models = new Set();
+  DATA[state.category]
+    .filter(x => key(x.english) === mine)
+    .forEach(x => expandModel(WORD_FIXES[x.id] || x.korean).forEach(v => models.add(v)));
+  return [...models];
+}
+
+function checkWord(typed, models) {
+  const a = nw(typed);
+  if (!a) return { status: 'empty' };
+  let spacing = null;
+  for (const m of models) {
+    const b = nw(m);
+    if (b.includes('OOO')) {                               // OOO = any word
+      const re = new RegExp('^' + b.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace('OOO', '.+') + '$');
+      if (re.test(a)) return { status: 'exact', model: m };
+      continue;
+    }
+    if (a === b) return { status: 'exact', model: m };
+    if (a.replace(/ /g, '') === b.replace(/ /g, '')) spacing = spacing || m;
+  }
+  if (spacing) return { status: 'spacing', model: spacing };
+  let best = models[0], bestScore = Infinity;
+  for (const m of models) {
+    const { fb } = diffFlags(a, nw(m));
+    const score = fb.filter(Boolean).length;
+    if (score < bestScore) { bestScore = score; best = m; }
+  }
+  return { status: 'wrong', model: best };
+}
+
+function wordFeedbackHtml(r, c, showAnswer) {
+  if (r.status === 'exact') return `<div class="verdict">✓ Correct</div>`;
+  if (r.status === 'spacing') {
+    return `<div class="verdict">✓ Correct</div>` + (showAnswer
+      ? `<div class="line"><span class="label">Spacing in the deck</span><span class="kr kr">${esc(nw(r.model))}</span></div>` : '');
+  }
+  const a = nw(r.typed), b = nw(r.model);
+  let h = `<div class="verdict">✗ Not an exact match</div>`;
+  if (showAnswer) {
+    const { fa, fb } = diffFlags(a, b);
+    h += `<div class="line"><span class="label">You wrote</span><span class="kr kr">${markedHtml(a, fa)}</span></div>
+          <div class="line"><span class="label">Deck says</span><span class="kr kr">${markedHtml(b, fb)}</span></div>`;
+    const full = WORD_FIXES[c.id] || c.korean;
+    if (nw(full) !== b) h += `<div class="line"><span class="label">Full entry</span><span class="kr kr">${esc(full)}</span></div>`;
+  } else {
+    h += `<div class="line"><span class="label">You wrote</span><span class="kr kr">${esc(a)}</span></div>`;
+  }
+  return h;
+}
+
+function renderWordPractice() {
+  const content = document.getElementById('content');
+  const deck = filteredDeck().slice().sort((a, b) => b.id - a.id);
+  if (deck.length === 0) {
+    content.innerHTML = '<div class="empty-state">No cards for this topic.</div>';
+    return;
+  }
+  const intro = document.createElement('div');
+  intro.className = 'practice-intro';
+  intro.textContent = 'Each card shows the English. Type the Korean and press Check (or Enter). The answer, example, note and picture stay hidden until you have checked, or you show them; hide them again to try once more. Answers are compared with the Korean saved in your deck.';
+  const summary = document.createElement('div');
+  summary.className = 'practice-score';
+  summary.style.margin = '-6px 0 14px';
+  function refresh() {
+    const P = state.practice;
+    const done = deck.filter(c => P.results[c.id + ':w']);
+    const ok = done.filter(c => P.results[c.id + ':w'].status !== 'wrong');
+    summary.textContent = done.length ? `${ok.length} of ${done.length} checked correct · ${deck.length} cards in this list` : `${deck.length} cards in this list`;
+  }
+  const wrap = document.createElement('div');
+  wrap.className = 'entries';
+  deck.forEach(c => wrap.appendChild(renderWordPracticeCard(c, refresh)));
+  refresh();
+  content.innerHTML = '';
+  content.appendChild(intro);
+  content.appendChild(summary);
+  content.appendChild(wrap);
+}
+
+function renderWordPracticeCard(c, onChange) {
+  const P = state.practice;
+  const key = c.id + ':w';
+  const revealed = !!P.revealed[c.id];
+  const korean = WORD_FIXES[c.id] || c.korean;
+
+  const el = document.createElement('div');
+  el.className = 'entry entry-' + state.category + ' entry-practice';
+  const rerender = () => { el.replaceWith(renderWordPracticeCard(c, onChange)); onChange(); };
+
+  // header: Korean hidden until revealed (left), English prompt (right)
+  const head = document.createElement('div');
+  head.className = 'head';
+  const left = document.createElement('span');
+  if (revealed) {
+    const pat = document.createElement('span');
+    pat.className = 'kr-main kr';
+    pat.textContent = korean;
+    const hide = document.createElement('button');
+    hide.className = 'link-btn';
+    hide.textContent = 'Hide answer';
+    hide.addEventListener('click', () => { P.revealed[c.id] = false; P.autoShown[c.id] = true; rerender(); });
+    left.appendChild(pat);
+    left.appendChild(hide);
+  } else {
+    const mask = document.createElement('span');
+    mask.className = 'pattern-mask';
+    mask.textContent = '· · ·';
+    const show = document.createElement('button');
+    show.className = 'link-btn';
+    show.textContent = 'Show answer';
+    show.addEventListener('click', () => { P.revealed[c.id] = true; P.autoShown[c.id] = true; rerender(); });
+    left.appendChild(mask);
+    left.appendChild(show);
+  }
+  const right = document.createElement('span');
+  right.className = 'en-main';
+  right.textContent = c.english;
+  head.appendChild(left);
+  head.appendChild(right);
+  el.appendChild(head);
+
+  if (c.topic) {
+    const meta = document.createElement('div');
+    meta.className = 'meta-row';
+    meta.innerHTML = `<span class="topic-tag">${esc(c.topic)}</span>`;
+    el.appendChild(meta);
+  }
+
+  // text field + Check
+  const row = document.createElement('div');
+  row.className = 'practice-row';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.lang = 'ko';
+  input.setAttribute('autocomplete', 'off');
+  input.setAttribute('autocorrect', 'off');
+  input.setAttribute('autocapitalize', 'off');
+  input.setAttribute('spellcheck', 'false');
+  input.placeholder = 'Type the Korean…';
+  input.setAttribute('aria-label', 'Korean for: ' + c.english);
+  input.value = P.answers[key] || '';
+  input.addEventListener('input', () => { P.answers[key] = input.value; });
+  const btn = document.createElement('button');
+  btn.className = 'check';
+  btn.textContent = 'Check';
+  row.appendChild(input);
+  row.appendChild(btn);
+  el.appendChild(row);
+
+  const r = P.results[key];
+  if (r) {
+    const fb = document.createElement('div');
+    fb.className = 'practice-feedback ' + (r.status === 'wrong' ? 'no' : 'ok');
+    fb.innerHTML = wordFeedbackHtml(r, c, revealed);
+    el.appendChild(fb);
+  }
+
+  function doCheck() {
+    const res = checkWord(input.value, wordModels(c));
+    if (res.status === 'empty') { input.focus(); return; }
+    P.results[key] = { status: res.status, typed: input.value, model: res.model };
+    if (!P.autoShown[c.id]) { P.autoShown[c.id] = true; P.revealed[c.id] = true; }   // first check reveals once
+    rerender();
+  }
+  btn.addEventListener('click', doCheck);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); doCheck(); }   // not mid-syllable
+  });
+
+  // reference: only once the answer is shown
+  if (revealed) {
+    const ref = document.createElement('div');
+    ref.className = 'practice-ref';
+    if (c.example && c.example.trim()) {
+      const u = document.createElement('div');
+      u.className = 'usage kr';
+      u.textContent = c.example;
+      ref.appendChild(u);
+    }
+    if (c.image_url) {
+      const img = document.createElement('img');
+      img.className = 'mnemonic';
+      img.src = c.image_url;
+      img.alt = 'mnemonic image for ' + korean;
+      img.addEventListener('click', () => openImageModal(c.image_full || c.image_url, img.alt, c.image_url));
+      ref.appendChild(img);
+    }
+    if (c.notes) {
+      const n = document.createElement('div');
+      n.className = 'note' + (c.notes.includes('⚠') ? ' flag' : '');
+      n.textContent = c.notes;
+      ref.appendChild(n);
+    }
+    if (ref.childNodes.length) el.appendChild(ref);
+  }
+  return el;
+}
+
+
+function renderAll() {
+  renderCategoryNav();
+  renderControls();
+  renderContent();
+}
+
+renderAll();
+</script>
+</body>
+</html>

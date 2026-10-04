@@ -860,5 +860,13 @@ def delete_lesson(lesson_date: str, confirm: bool = False) -> dict:
     return {"deleted": True, "lesson_date": lesson_date}
 
 
+# --- Korean Notebook web pages (same service, same database) -----------------
+# Served at /notebook. If anything about the pages is wrong, the bot must still start.
+try:
+    from notebook_pages import register_notebook
+    register_notebook(mcp, get_db)
+except Exception as e:
+    print(f"[notebook] pages not loaded: {e}")
+
 if __name__ == "__main__":
     mcp.run(transport="sse", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
